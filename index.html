@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Access Control – Activity Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* This page is intentionally always light (white and soft pink), even when the viewer or device prefers dark mode. */
+:root{
+  color-scheme:light;
+  --bg:#fffafc; --surface:#ffffff; --surface-2:#fdf2f6; --border:#f4dbe5; --border-strong:#e9bfd0; --text:#3f1d2e; --muted:#80566a;
+  --primary:#c93a72; --primary-dark:#a32a5b; --primary-soft:#fce8f0; --primary-ink:#ffffff; --accent:#f3aeca;
+  --good:#23714a; --good-soft:#e7f6ed; --good-border:#9fd6b6; --bad:#b4231b; --bad-soft:#fff0ee; --bad-border:#f0b0aa;
+  --warn:#86590a; --warn-soft:#fff8e3; --warn-border:#efd99a; --topbar:rgba(255,255,255,.92);
+  --shadow:0 1px 2px rgba(63,29,46,.05),0 12px 28px rgba(201,58,114,.07); --btn-shadow:0 6px 16px rgba(201,58,114,.22); --code-bg:#fdf5f8;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:light;
+    --bg:#fffafc; --surface:#ffffff; --surface-2:#fdf2f6; --border:#f4dbe5; --border-strong:#e9bfd0; --text:#3f1d2e; --muted:#80566a;
+    --primary:#c93a72; --primary-dark:#a32a5b; --primary-soft:#fce8f0; --primary-ink:#ffffff; --accent:#f3aeca;
+    --good:#23714a; --good-soft:#e7f6ed; --good-border:#9fd6b6; --bad:#b4231b; --bad-soft:#fff0ee; --bad-border:#f0b0aa;
+    --warn:#86590a; --warn-soft:#fff8e3; --warn-border:#efd99a; --topbar:rgba(255,255,255,.92);
+    --shadow:0 1px 2px rgba(63,29,46,.05),0 12px 28px rgba(201,58,114,.07); --btn-shadow:0 6px 16px rgba(201,58,114,.22); --code-bg:#fdf5f8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:light;
+  --bg:#fffafc; --surface:#ffffff; --surface-2:#fdf2f6; --border:#f4dbe5; --border-strong:#e9bfd0; --text:#3f1d2e; --muted:#80566a;
+  --primary:#c93a72; --primary-dark:#a32a5b; --primary-soft:#fce8f0; --primary-ink:#ffffff; --accent:#f3aeca;
+  --good:#23714a; --good-soft:#e7f6ed; --good-border:#9fd6b6; --bad:#b4231b; --bad-soft:#fff0ee; --bad-border:#f0b0aa;
+  --warn:#86590a; --warn-soft:#fff8e3; --warn-border:#efd99a; --topbar:rgba(255,255,255,.92);
+  --shadow:0 1px 2px rgba(63,29,46,.05),0 12px 28px rgba(201,58,114,.07); --btn-shadow:0 6px 16px rgba(201,58,114,.22); --code-bg:#fdf5f8;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 80px);background:#fffafc}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+  background-image:radial-gradient(900px 420px at 0% -8%,var(--primary-soft),transparent 65%),radial-gradient(700px 360px at 100% 0%,var(--surface-2),transparent 60%);background-repeat:no-repeat;
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--topbar);backdrop-filter:blur(10px)}
+img,svg{max-width:100%}
+h1,h2,h3,h4{font-family:"Lexend","Atkinson Hyperlegible",system-ui,sans-serif;line-height:1.2;margin:0 0 .5em;letter-spacing:-.01em;color:var(--text);font-weight:700}
+h1{font-size:clamp(2rem,5.2vw,3.2rem)}
+h2{font-size:clamp(1.35rem,3.1vw,1.8rem)}
+h3{font-size:1.18rem}
+h4{font-size:1.02rem}
+p{margin:0 0 .8em}
+b,strong{font-weight:700}
+.mono,code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{font-size:.86em;background:var(--code-bg);border:1px solid var(--border);padding:.05em .4em;border-radius:6px}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:8px}
+.wrap{max-width:920px;margin:0 auto;padding:26px 20px 70px}
+.small{font-size:.9rem}.muted{color:var(--muted)}
+.row{display:flex;align-items:center;gap:10px}.row.wrap{flex-wrap:wrap}.between{justify-content:space-between}.end{justify-content:flex-end}.center{justify-content:center}
+.stack>*+*{margin-top:18px}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--topbar);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.topbar-in{max-width:920px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;cursor:pointer;color:var(--text);text-align:left}
+.brand:disabled{cursor:default}
+.brand-ic{width:36px;height:36px;border-radius:11px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:18px;flex:none}
+.brand-t{font-family:"Lexend",sans-serif;font-weight:700;font-size:1.02rem;line-height:1.1}
+.brand-t small{display:block;font-family:"Atkinson Hyperlegible",sans-serif;font-weight:400;font-size:.8rem;color:var(--muted)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tb-prog{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);font-weight:700}
+.tb-prog .progress{width:90px}
+.student{display:flex;align-items:center;gap:8px;font-size:.88rem;line-height:1.2}
+.student small{display:block;color:var(--muted)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--primary-soft);color:var(--primary-dark);display:grid;place-items:center;font-weight:700;border:1.5px solid var(--accent)}
+
+/* Basics */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:clamp(18px,3.6vw,32px)}
+.tag{display:inline-flex;align-items:center;gap:8px;font-size:.88rem;font-weight:700;color:var(--primary-dark);background:var(--primary-soft);padding:5px 12px;border-radius:999px}
+.lead{font-size:1.12rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;font-weight:700;padding:4px 11px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);color:var(--primary-dark)}
+.pill.warn{background:var(--warn-soft);border-color:var(--warn-border);color:var(--warn)}
+.progress{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:99px;transition:width .45s ease}
+.btn{appearance:none;border:0;border-radius:12px;padding:12px 20px;font-size:1rem;font-weight:700;cursor:pointer;background:var(--primary);color:var(--primary-ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .2s;box-shadow:var(--btn-shadow)}
+.btn:hover{background:var(--primary-dark)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn-ghost{background:transparent;color:var(--primary-dark);border:1.5px solid var(--border-strong);box-shadow:none}
+.btn-ghost:hover{background:var(--primary-soft)}
+.btn-soft{background:var(--primary-soft);color:var(--primary-dark);box-shadow:none;border:1px solid var(--border)}
+.btn-soft:hover{background:var(--surface-2);border-color:var(--primary)}
+.btn-skip{background:var(--surface-2);color:var(--muted);box-shadow:none;border:1px solid var(--border)}
+.btn-skip:hover{background:var(--primary-soft);color:var(--primary-dark)}
+.btn-sm{padding:8px 14px;font-size:.92rem;border-radius:10px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:.95rem}
+.input{font:inherit;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text);outline:none;transition:border .2s,box-shadow .2s;width:100%}
+.input:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+.err{color:var(--bad);font-size:.92rem;font-weight:700;min-height:1.3em;margin-top:6px}
+
+/* Welcome */
+.hero-grid{display:grid;grid-template-columns:1.2fr .95fr;gap:24px;align-items:center}
+.hero-facts{list-style:none;padding:0;margin:16px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hero-facts li{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;font-size:.95rem}
+.gate{display:flex;flex-direction:column;gap:10px}
+.gate-h{text-align:center;font-family:"Lexend",sans-serif;font-weight:700;color:var(--primary-dark);font-size:.95rem}
+.ticket{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--surface);border:1.5px dashed var(--border-strong);border-radius:14px;padding:10px 14px;box-shadow:var(--shadow)}
+.ticket:nth-child(2){transform:rotate(-1.5deg)}.ticket:nth-child(4){transform:rotate(1.2deg)}
+.ticket .who{font-weight:700}
+.ticket .what{font-size:.86rem;color:var(--muted)}
+.stamp{font-family:"Lexend",sans-serif;font-weight:700;font-size:.82rem;padding:4px 10px;border-radius:8px;border:2px solid;transform:rotate(-6deg)}
+.stamp.allow{color:var(--good);border-color:var(--good)}
+.stamp.deny{color:var(--bad);border-color:var(--bad)}
+.who-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end}
+
+/* Overview */
+.objectives{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.objectives li::marker{color:var(--primary);font-weight:700}
+.journey{display:grid;gap:12px}
+.jcard{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;border:1.5px solid var(--border);border-radius:16px;padding:16px;background:var(--surface)}
+.jcard.locked{opacity:.65}
+.jcard.quiz{border-color:var(--accent);background:var(--surface-2)}
+.jnum{width:46px;height:46px;border-radius:14px;background:var(--primary-soft);color:var(--primary-dark);display:grid;place-items:center;font-family:"Lexend",sans-serif;font-weight:700;font-size:1.25rem;border:1.5px solid var(--accent)}
+.jtitle{font-weight:700;font-size:1.05rem}
+.jmeta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.marks{width:100%;border-collapse:collapse;font-size:.96rem}
+.marks th,.marks td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+.marks tr:last-child td,.marks tr:last-child th{border-bottom:0}
+.marks th{background:var(--surface-2);font-weight:700}
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.howto div{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px}
+.howto .ic{font-size:1.5rem;display:block}
+
+/* Step */
+.crumbs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.95rem;margin-bottom:10px}
+.step-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec-tag{display:inline-flex;align-items:center;gap:8px;font-family:"Lexend",sans-serif;font-weight:700;font-size:1.04rem;margin-bottom:12px;color:var(--primary-dark)}
+.key{background:var(--primary-soft);border-left:5px solid var(--primary);padding:14px 16px;border-radius:12px;margin-top:14px}
+.analogy{background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:12px;padding:12px 14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.mini{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px}
+.mini-h{font-family:"Lexend",sans-serif;font-weight:700;margin-bottom:4px;color:var(--primary-dark)}
+.activity{border:2px solid var(--accent);background:linear-gradient(180deg,var(--surface-2),var(--surface) 160px)}
+.act-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.done-badge{display:none;align-items:center;gap:6px;background:var(--good);color:#fff;font-weight:700;font-size:.88rem;padding:4px 12px;border-radius:999px}
+.activity.is-done .done-badge{display:inline-flex}
+.task-text{font-weight:700;font-size:1.02rem}
+.hint-area{margin-top:16px;border-top:1px dashed var(--border-strong);padding-top:14px}
+.hint-btn{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-border);box-shadow:none}
+.hint-btn:hover{background:var(--warn-soft);border-color:var(--warn)}
+.hintbox{background:var(--warn-soft);border:1px solid var(--warn-border);padding:10px 14px;border-radius:12px;margin-top:10px;animation:pop .25s}
+.feedback{padding:12px 14px;border-radius:12px;margin-top:12px;border-left:5px solid var(--border-strong);background:var(--surface-2);animation:pop .25s}
+.feedback.good{background:var(--good-soft);border-left-color:var(--good)}
+.feedback.bad{background:var(--bad-soft);border-left-color:var(--bad)}
+.fb-actions{margin-top:10px}
+.stepnav{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dots{display:flex;gap:6px;align-items:center}
+.dots i{width:10px;height:10px;border-radius:99px;background:var(--border-strong);transition:.3s}
+.dots i.ok{background:var(--accent)}
+.dots i.on{width:28px;background:var(--primary)}
+.part{margin:20px 0 8px;color:var(--primary-dark)}
+.part:first-child{margin-top:0}
+.flowline{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:12px 0}
+.flowline .fbox{flex:1 1 130px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:10px 12px;text-align:center}
+.flowline .fbox b{display:block;font-family:"Lexend",sans-serif}
+.flowline .fbox.hi{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.flowline .arr{align-self:center;color:var(--primary);font-weight:700}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:10px}
+.role{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:.93rem}
+.role b{display:block;color:var(--primary-dark)}
+
+/* Choice quiz */
+.cq-top{display:flex;align-items:center;gap:12px}
+.cq-bar{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+.cq-bar i{display:block;height:100%;background:var(--primary);transition:width .3s}
+.cq-q{font-size:1.06rem;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:12px}
+.opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.opt{font-size:1rem;font-weight:700;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;text-align:left;line-height:1.35}
+.opt:hover:not(:disabled){border-color:var(--primary);background:var(--primary-soft)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.attrs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.attr{font-size:.86rem;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:3px 9px}
+.attr b{color:var(--primary-dark)}
+.lvl{display:inline-block;font-size:.8rem;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid var(--border-strong);background:var(--surface)}
+
+/* Flip */
+.flips{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.flip{perspective:900px;height:236px;cursor:pointer;border:0;background:none;padding:0;color:inherit;text-align:left}
+.flip-in{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.flip.on .flip-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;padding:16px;border:2px solid var(--border-strong);display:flex;flex-direction:column}
+.front{background:var(--surface);align-items:center;justify-content:center;text-align:center;gap:2px}
+.flip:hover .front{border-color:var(--primary)}
+.back{background:var(--primary-soft);border-color:var(--accent);transform:rotateY(180deg);font-size:.92rem;overflow:auto;gap:6px}
+.big-emoji{font-size:44px;line-height:1.1}
+.f-big{font-family:"Lexend",sans-serif;font-weight:700;font-size:1.7rem;color:var(--primary-dark)}
+.f-type{font-weight:700;color:var(--primary-dark)}
+.weak{margin-top:auto;background:var(--surface);border-radius:10px;padding:6px 8px;font-size:.86rem}
+
+/* Sort */
+.sub{font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:56px;padding:12px;border-radius:14px;background:var(--surface);border:1.5px dashed var(--border-strong)}
+.chip{font-size:.95rem;font-weight:700;padding:8px 14px;border-radius:999px;border:1.5px solid var(--border-strong);background:var(--surface-2);color:var(--text);cursor:pointer;transition:transform .15s,background .15s;text-align:left}
+.chip:hover{border-color:var(--primary)}
+.chip.sel{background:var(--primary);color:var(--primary-ink);border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--btn-shadow)}
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
+.bucket{text-align:left;cursor:pointer;border-radius:14px;border:2px solid var(--border-strong);background:var(--surface);padding:12px;min-height:130px;color:var(--text);display:flex;flex-direction:column;gap:6px;transition:border-color .15s,background .15s}
+.bucket:hover{border-color:var(--primary);background:var(--surface-2)}
+.bh{font-family:"Lexend",sans-serif;font-weight:700;font-size:1rem}
+.placedlist{display:flex;flex-wrap:wrap;gap:5px}
+.placed{font-size:.82rem;background:var(--good-soft);border:1px solid var(--good-border);border-radius:8px;padding:2px 8px;color:var(--good);font-weight:700}
+
+/* Ordering */
+.order-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.events{display:grid;gap:8px}
+.event{width:100%;font-weight:400}
+.timeline{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.tl-empty{border:1.5px dashed var(--border-strong);border-radius:12px;padding:14px;color:var(--muted);text-align:center}
+.tl-item{display:flex;gap:12px;align-items:flex-start;background:var(--good-soft);border:1px solid var(--good-border);border-radius:12px;padding:10px 12px;animation:pop .3s}
+.tl-num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-weight:700}
+.tl-phase{font-size:.84rem;font-weight:700;color:var(--primary-dark)}
+
+/* Matrix */
+table.matrix{width:100%;border-collapse:separate;border-spacing:0;font-size:.92rem}
+table.matrix th,table.matrix td{padding:9px 10px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;white-space:nowrap}
+table.matrix th{background:var(--surface-2)}
+table.matrix td{font-family:"JetBrains Mono",monospace;font-size:.84rem}
+table.matrix td.empty{color:var(--border-strong)}
+table.matrix .hdr{font:inherit;font-weight:700;background:var(--surface);border:1.5px solid var(--border-strong);border-radius:8px;padding:5px 9px;cursor:pointer;color:var(--text)}
+table.matrix .hdr:hover{border-color:var(--primary);background:var(--primary-soft)}
+table.matrix .hl{background:var(--primary-soft)}
+.listout{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:10px;min-height:52px}
+.tasks{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.task{display:flex;gap:10px;align-items:center;font-weight:700;color:var(--muted)}
+.tick{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-strong);display:grid;place-items:center;font-size:.8rem;flex:none;color:transparent;transition:.25s}
+.task.ok{color:var(--good)}
+.task.ok .tick{background:var(--good);border-color:var(--good);color:#fff}
+
+/* Permission builder */
+.perm{display:grid;grid-template-columns:auto repeat(3,1fr);gap:8px;align-items:center;max-width:520px}
+.perm .ph{font-weight:700;text-align:center;font-size:.9rem}
+.perm .rh{font-weight:700}
+.pbtn{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:1.05rem;padding:10px;border-radius:12px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--muted);cursor:pointer;transition:.15s}
+.pbtn[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.permout{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.permout .stat{flex:1 1 160px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:.84rem;color:var(--muted);font-weight:700}
+.stat .v{font-weight:700;font-size:1.15rem}
+.mission{background:var(--surface);border:1.5px solid var(--accent);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+
+/* Ladder */
+.ladder{display:flex;flex-direction:column;gap:6px;max-width:420px;margin:12px 0}
+.rung{display:flex;justify-content:space-between;align-items:center;border-radius:10px;padding:8px 12px;font-weight:700;border:1px solid var(--border)}
+.rung:nth-child(1){background:#f9d3e2}.rung:nth-child(2){background:#fbe0ea}.rung:nth-child(3){background:#fdecf2}.rung:nth-child(4){background:#fff7fa}
+
+/* Review */
+.review-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.review-row.right{border-color:var(--good-border);background:var(--good-soft)}
+.review-row.wrong{border-color:var(--bad-border);background:var(--bad-soft)}
+.review-row .why{grid-column:1/-1;font-size:.92rem}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px}
+.seg button{font-size:.92rem;font-weight:700;border:0;background:transparent;color:var(--muted);padding:7px 12px;border-radius:9px;cursor:pointer}
+.seg button.on.keep{background:var(--good);color:#fff}
+.seg button.on.rev{background:var(--bad);color:#fff}
+.reviews{display:flex;flex-direction:column;gap:8px}
+
+/* Sequence */
+.seq{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.msg{display:flex;flex-direction:column;gap:3px;padding:10px 14px;border-radius:12px;background:var(--surface);border:1.5px solid var(--border);animation:slide .35s}
+.msg .dir{font-size:.86rem;font-weight:700;color:var(--muted)}
+.msg .pay{font-size:.98rem}
+.msg .note{font-size:.9rem;color:var(--muted)}
+.msg.l{margin-right:16%}.msg.r{margin-left:16%}
+.msg.c{margin:0 8%;background:var(--surface-2);border-style:dashed}
+.msg.ok{background:var(--good-soft);border-color:var(--good-border)}
+.actors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;font-weight:700}
+.actors div{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px;font-size:.92rem}
+
+/* Done, quiz, result */
+.done-card{text-align:center}
+.medal{font-size:64px;line-height:1}
+.takeaways{text-align:left;background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:16px 20px;margin:18px auto;max-width:640px}
+.takeaways ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.qprompt{font-size:1.22rem;margin:14px 0}
+.qopts{display:flex;flex-direction:column;gap:10px}
+.qopt{display:flex;gap:12px;align-items:center;text-align:left;font-size:1rem;padding:12px 14px;border-radius:14px;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;transition:background .15s,border-color .15s}
+.qopt:hover:not(:disabled){border-color:var(--primary);background:var(--surface-2)}
+.qopt:disabled{cursor:default}
+.letter{width:32px;height:32px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;flex:none;border:1px solid var(--border)}
+.qopt.sel{border-color:var(--primary);background:var(--primary-soft)}
+.qopt.sel .letter{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.qopt.right{border-color:var(--good);background:var(--good-soft)}
+.qopt.right .letter{background:var(--good);color:#fff}
+.qopt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qopt.wrong .letter{background:var(--bad);color:#fff}
+.cert{border:2px solid var(--accent)}
+.result-grid{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;margin-top:12px}
+.ring{width:170px;height:170px;border-radius:50%;background:conic-gradient(var(--primary) calc(var(--p) * 1%),var(--surface-2) 0);display:grid;place-items:center;border:1px solid var(--border)}
+.ring>div{width:132px;height:132px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;line-height:1}
+.ring b{font-family:"Lexend",sans-serif;font-size:2.7rem;color:var(--primary-dark)}
+.ring span{display:block;color:var(--muted);font-size:1rem;margin-top:4px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.kv div{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
+.kv small{display:block;color:var(--muted);font-size:.84rem}
+.kv b{font-size:1.02rem;word-break:break-word}
+.status-pass{color:var(--good)}.status-fail{color:var(--bad)}
+.review{margin:0;padding-left:1.3em;display:grid;gap:12px}
+.review li{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.review .yes{color:var(--good);font-weight:700}.review .no{color:var(--bad);font-weight:700}
+textarea.copybox{width:100%;min-height:150px;font-family:"JetBrains Mono",monospace;font-size:.85rem;border-radius:12px;border:1.5px solid var(--border-strong);padding:10px;background:var(--surface);color:var(--text);margin-top:10px}
+.foot{text-align:center;color:var(--muted);font-size:.86rem;padding:0 20px 30px}
+
+@keyframes pop{from{transform:scale(.98);opacity:0}to{transform:none;opacity:1}}
+@keyframes slide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .4s}
+.screen{animation:slide .35s ease}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.confetti i{position:absolute;top:-14px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(106vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+@media (max-width:760px){
+  .hero-grid,.who-grid,.order-grid,.two-col,.result-grid{grid-template-columns:1fr}
+  .hero-facts{grid-template-columns:1fr}
+  .jcard{grid-template-columns:auto 1fr}
+  .jcard .btn{grid-column:1/-1}
+  .msg.l{margin-right:4%}.msg.r{margin-left:4%}.msg.c{margin:0 2%}
+  .ring{margin:0 auto}
+  .tb-prog{display:none}
+  .review-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="topbar" id="topbar"></header>
+<main id="app" class="wrap"></main>
+<footer class="foot">Progress is saved in this browser only. On a shared lab computer, choose “I’m a different student” before starting.</footer>
+
+<script>
+(function(){
+"use strict";
+/* Keep the page light even if the viewer switches to dark mode */
+const rootEl = document.documentElement;
+function forceLight(){ if(rootEl.getAttribute("data-theme") !== "light") rootEl.setAttribute("data-theme","light"); }
+forceLight();
+try{ new MutationObserver(forceLight).observe(rootEl, {attributes:true, attributeFilter:["data-theme"]}); }catch(e){}
+
+const KEY = "ac-activity-lab-v1";
+const TOTAL = 15;
+const app = document.getElementById("app");
+const topbar = document.getElementById("topbar");
+const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function fresh(){ return { name:"", roll:"", maxPos:-1, done:{}, results:[] }; }
+let S = fresh();
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const v = localStorage.getItem(KEY); if(v){ const o = JSON.parse(v); if(o && typeof o === "object") S = Object.assign(fresh(), o); } }catch(e){} }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function shake(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+function doneCount(){ return Object.keys(S.done).filter(k => S.done[k]).length; }
+let mode = "welcome";
+
+function confetti(){
+  if(reduceMotion) return;
+  const cols = ["#c93a72","#f3aeca","#f7c86b","#9fd6b6","#b98ad9"];
+  const box = document.createElement("div"); box.className = "confetti";
+  for(let i=0;i<70;i++){ const p = document.createElement("i"); p.style.left = (Math.random()*100)+"vw"; p.style.background = cols[i%cols.length]; p.style.animationDelay = (Math.random()*.7)+"s"; p.style.animationDuration = (2+Math.random()*1.6)+"s"; box.appendChild(p); }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 4500);
+}
+
+/* ---------- Generic activity builders ---------- */
+function choiceQuiz(root, cfg){
+  const items = cfg.items; let i = 0, first = 0, missed = false;
+  const wrap = document.createElement("div"); root.appendChild(wrap);
+  function show(){
+    if(i >= items.length){
+      wrap.innerHTML = `<div class="feedback good">🎉 All ${items.length} done! Correct on the first try: <b>${first} of ${items.length}</b></div>`;
+      if(cfg.onDone) cfg.onDone(); return;
+    }
+    const it = items[i]; missed = false;
+    let opts = (it.opts || cfg.options).slice(); if(cfg.shuffle) opts = shuffle(opts);
+    wrap.innerHTML = `<div class="cq-top"><span class="pill">${i+1} of ${items.length}</span><span class="cq-bar"><i style="width:${i/items.length*100}%"></i></span></div>
+      <div class="cq-q">${it.q}</div>
+      <div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join("")}</div>
+      <div class="cq-fb" aria-live="polite"></div>`;
+    const fb = wrap.querySelector(".cq-fb");
+    wrap.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+      const o = opts[+b.dataset.k];
+      if(o === it.a){
+        if(!missed) first++;
+        wrap.querySelectorAll(".opt").forEach(x => x.disabled = true);
+        b.classList.add("right");
+        fb.innerHTML = `<div class="feedback good"><b>Correct!</b> ${it.why}<div class="fb-actions"><button class="btn btn-sm">${i+1 < items.length ? "Next one" : "Finish"}</button></div></div>`;
+        fb.querySelector("button").addEventListener("click", () => { i++; show(); });
+      } else {
+        missed = true; b.classList.add("wrong"); b.disabled = true; shake(b);
+        fb.innerHTML = `<div class="feedback bad"><b>Not quite.</b> ${it.hint || cfg.hint || "Read it again and try another option."}</div>`;
+      }
+    }));
+  }
+  show();
+}
+
+function sortGame(root, cfg, onDone){
+  const items = shuffle(cfg.items); let sel = null, placed = 0, first = 0; const missed = new Set();
+  root.innerHTML = `<div class="sub">Items to sort <span class="pill" data-left>${items.length} left</span></div>
+    <div class="pool" data-pool></div>
+    <div class="buckets">${cfg.buckets.map(b=>`<button class="bucket" data-f="${b.id}"><span class="bh">${b.e} ${b.label}</span><span class="small muted">${b.sub}</span><div class="placedlist"></div></button>`).join("")}</div>
+    <div data-fb aria-live="polite"></div>`;
+  const pool = root.querySelector("[data-pool]"), fb = root.querySelector("[data-fb]"), left = root.querySelector("[data-left]");
+  const nameOf = id => cfg.buckets.find(b=>b.id===id).label;
+  items.forEach(it => {
+    const c = el(`<button class="chip">${it.t}</button>`); c._it = it;
+    c.addEventListener("click", () => {
+      pool.querySelectorAll(".chip").forEach(x => x.classList.remove("sel")); c.classList.add("sel"); sel = c;
+      fb.innerHTML = `<div class="feedback">Selected <b>${it.t}</b>. Now tap the box it belongs to.</div>`;
+    });
+    pool.appendChild(c);
+  });
+  root.querySelectorAll(".bucket").forEach(b => b.addEventListener("click", () => {
+    if(!sel){ shake(b); fb.innerHTML = `<div class="feedback">First tap an item in the dashed box, then tap a box.</div>`; return; }
+    const it = sel._it;
+    if(it.f === b.dataset.f){
+      if(!missed.has(it.t)) first++;
+      b.querySelector(".placedlist").appendChild(el(`<span class="placed">${it.t}</span>`));
+      sel.remove(); sel = null; placed++; left.textContent = (items.length-placed) + " left";
+      if(placed === items.length){
+        pool.innerHTML = `<span class="muted">All sorted!</span>`;
+        fb.innerHTML = `<div class="feedback good">🎉 All ${items.length} sorted! Correct on the first try: <b>${first} of ${items.length}</b>.</div>`;
+        onDone();
+      } else fb.innerHTML = `<div class="feedback good">✓ <b>${it.t}</b> belongs in <b>${nameOf(it.f)}</b>.${it.why ? " " + it.why : ""}</div>`;
+    } else {
+      missed.add(it.t); shake(b);
+      fb.innerHTML = `<div class="feedback bad">Not “${nameOf(b.dataset.f)}”. Hint: ${cfg.tips[it.f]}</div>`;
+    }
+  }));
+}
+
+function orderGame(root, events, doneMsg, onDone){
+  let next = 0; const order = shuffle(events.map((e,i)=>i));
+  root.innerHTML = `<div class="order-grid">
+    <div><div class="sub">Steps (shuffled)</div><div class="events" data-evs></div></div>
+    <div><div class="sub">Your timeline</div><ol class="timeline" data-tl><li class="tl-empty">Click the step that happens first</li></ol></div>
+  </div><div data-fb aria-live="polite"></div>`;
+  const evs = root.querySelector("[data-evs]"), tl = root.querySelector("[data-tl]"), fb = root.querySelector("[data-fb]");
+  order.forEach(i => {
+    const b = el(`<button class="opt event">${events[i].t}</button>`);
+    b.addEventListener("click", () => {
+      if(i === next){
+        b.remove(); if(next === 0) tl.innerHTML = "";
+        tl.appendChild(el(`<li class="tl-item"><span class="tl-num">${next+1}</span><div><div class="tl-phase">${events[i].phase}</div>${events[i].t}</div></li>`));
+        next++;
+        if(next === events.length){ fb.innerHTML = `<div class="feedback good">${doneMsg}</div>`; onDone(); }
+        else fb.innerHTML = `<div class="feedback good">✓ Correct. What comes next?</div>`;
+      } else { shake(b); fb.innerHTML = `<div class="feedback bad">Not yet. Hint: ${events[next].clue}</div>`; }
+    });
+    evs.appendChild(b);
+  });
+}
+
+function flipGame(root, cards, doneMsg, onDone){
+  const seen = new Set();
+  root.innerHTML = `<div class="flips">${cards.map((f,i)=>`
+    <button class="flip" data-i="${i}" aria-label="Flip the card: ${f.name}">
+      <div class="flip-in">
+        <div class="face front"><div class="big-emoji">${f.e}</div><div class="f-big">${f.k}</div><div class="muted">${f.name}</div><div class="small muted">Tap to flip</div></div>
+        <div class="face back"><span class="f-type">${f.e} ${f.name}</span>${f.back}</div>
+      </div></button>`).join("")}</div><div data-fb aria-live="polite"></div>`;
+  const fb = root.querySelector("[data-fb]");
+  root.querySelectorAll(".flip").forEach(b => b.addEventListener("click", () => {
+    b.classList.toggle("on"); seen.add(b.dataset.i);
+    if(seen.size === cards.length){ if(!root._flipDone){ root._flipDone = true; fb.innerHTML = `<div class="feedback good">${doneMsg}</div>`; onDone(); } }
+    else fb.innerHTML = `<div class="feedback">${seen.size} of ${cards.length} cards flipped.</div>`;
+  }));
+}
+
+/* ---------- Shared access matrix ---------- */
+const SUBJ = ["Ali (student)","Sara (student)","Dr. Noor (teacher)","Backup process"];
+const OBJ = ["marks.xlsx","notes.pdf","ali_assignment.docx","grader.exe"];
+const MAT = [
+  ["", "Read", "Own, Read, Write", ""],
+  ["", "Read", "", ""],
+  ["Read, Write", "Own, Read, Write", "Read", "Execute"],
+  ["Read", "Read", "Read", ""]
+];
+function matrixHTML(clickable){
+  const h = (t, attr) => clickable ? `<button class="hdr" ${attr}>${t}</button>` : `<b>${t}</b>`;
+  return `<div class="tablewrap"><table class="matrix"><thead><tr><th>Subject ↓ / Object →</th>${OBJ.map((o,j)=>`<th data-col="${j}">${h(o,`data-c="${j}"`)}</th>`).join("")}</tr></thead>
+    <tbody>${SUBJ.map((s,i)=>`<tr><th data-row="${i}">${h(s,`data-r="${i}"`)}</th>${MAT[i].map((v,j)=>`<td data-cell="${i}-${j}" class="${v?"":"empty"}">${v||"—"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+
+/* ---------- Activities: Lesson 1 ---------- */
+function act_aaa(root, api){
+  const AN = "Authentication", AC = "Access control decision", AZ = "Authorization (granting rights)", AU = "Auditing";
+  choiceQuiz(root, {
+    options:[AN, AZ, AC, AU],
+    hint:"Ask: is the system checking <b>who</b> you are, <b>setting up</b> what you may do, <b>checking</b> a request right now, or <b>recording</b> what happened?",
+    items:[
+      {q:"The portal checks Sana’s password and the OTP sent to her phone.", a:AN, why:"Proving who Sana is happens <b>before</b> access control."},
+      {q:"The security administrator adds a rule to the authorization database: teachers may edit marks.", a:AZ, why:"Granting rights is authorization. The rules are stored for later decisions."},
+      {q:"Ali clicks Delete on a file, and the system checks his rights before letting it happen.", a:AC, why:"This is the access control function deciding one request in real time."},
+      {q:"The system writes a log entry: “Ali opened marks.xlsx at 10:42 pm”.", a:AU, why:"Recording who did what, and when, is auditing."},
+      {q:"You scan your fingerprint at the office door.", a:AN, why:"Your fingerprint proves who you are. What you may do inside is a separate question."},
+      {q:"The security team reads last week’s logs and spots someone trying to open the exam folder 40 times.", a:AU, why:"Reviewing records to spot misuse is auditing."}
+    ],
+    onDone: api.complete
+  });
+}
+
+function act_soar(root, api){
+  sortGame(root, {
+    buckets:[
+      {id:"s", e:"🙋", label:"Subject", sub:"the one asking for access"},
+      {id:"o", e:"📁", label:"Object", sub:"the thing being protected"},
+      {id:"r", e:"🔑", label:"Access right", sub:"what may be done"}
+    ],
+    tips:{ s:"This is an active user, group or program that asks to do something.", o:"This is a resource that gets used, so it needs protecting.", r:"This is an action: a way a subject may use an object." },
+    items:[
+      {t:"Student Ali", f:"s"}, {t:"Teacher’s user account", f:"s"}, {t:"A running backup program", f:"s", why:"Programs (processes) act on behalf of users, so they are subjects too."}, {t:"The group “all teachers”", f:"s"},
+      {t:"marks.xlsx", f:"o"}, {t:"Department printer", f:"o"}, {t:"Student records database table", f:"o"}, {t:"A shared folder", f:"o"},
+      {t:"Read", f:"r"}, {t:"Write", f:"r"}, {t:"Execute", f:"r"}, {t:"Delete", f:"r"}
+    ]
+  }, api.complete);
+}
+
+function act_matrix(root, api){
+  let sawAcl = false, sawCap = false, qDone = false;
+  root.innerHTML = `<p class="small muted">Tap an <b>object name</b> (column) to see its ACL, or a <b>subject name</b> (row) to see its capability list.</p>
+    ${matrixHTML(true)}
+    <div class="listout" id="lo" aria-live="polite">Nothing selected yet.</div>
+    <div class="tasks">
+      <div class="task" id="ta"><span class="tick">✓</span>Open one access control list (a column)</div>
+      <div class="task" id="tc"><span class="tick">✓</span>Open one capability list (a row)</div>
+    </div>
+    <h4 class="part">Read the matrix</h4><div id="mq"></div>`;
+  const lo = root.querySelector("#lo");
+  function clearHl(){ root.querySelectorAll(".hl").forEach(x => x.classList.remove("hl")); }
+  function chk(){ if(sawAcl && sawCap && qDone) api.complete(); }
+  root.querySelectorAll("[data-c]").forEach(b => b.addEventListener("click", () => {
+    const j = +b.dataset.c; clearHl();
+    root.querySelectorAll(`[data-cell$="-${j}"]`).forEach(x => x.classList.add("hl"));
+    const list = SUBJ.map((s,i)=>MAT[i][j] ? `<b>${s}</b>: ${MAT[i][j]}` : null).filter(Boolean);
+    lo.innerHTML = `📋 <b>ACL for ${OBJ[j]}</b> (stored with the object): ${list.join(" · ") || "nobody"}`;
+    sawAcl = true; root.querySelector("#ta").classList.add("ok"); chk();
+  }));
+  root.querySelectorAll("[data-r]").forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.r; clearHl();
+    root.querySelectorAll(`[data-cell^="${i}-"]`).forEach(x => x.classList.add("hl"));
+    const list = OBJ.map((o,j)=>MAT[i][j] ? `<b>${o}</b>: ${MAT[i][j]}` : null).filter(Boolean);
+    lo.innerHTML = `🎟️ <b>Capability list for ${SUBJ[i]}</b> (carried by the subject): ${list.join(" · ") || "nothing"}`;
+    sawCap = true; root.querySelector("#tc").classList.add("ok"); chk();
+  }));
+  const Y = "Yes, allowed", N = "No, not allowed";
+  choiceQuiz(root.querySelector("#mq"), {
+    options:[Y, N],
+    hint:"Find the subject’s row, then move across to the object’s column. An empty cell (—) means no rights at all.",
+    items:[
+      {q:"Can <b>Sara</b> read <b>ali_assignment.docx</b>?", a:N, why:"Sara’s cell for that file is empty, so she has no rights."},
+      {q:"Can <b>Dr. Noor</b> write to <b>marks.xlsx</b>?", a:Y, why:"Her cell says Read, Write."},
+      {q:"Can <b>Ali</b> execute <b>grader.exe</b>?", a:N, why:"Only Dr. Noor has Execute on grader.exe."},
+      {q:"Can the <b>Backup process</b> read <b>marks.xlsx</b>?", a:Y, why:"Backups need to read files, so it has Read, but not Write."},
+      {q:"An <b>access control list (ACL)</b> stores the matrix…", opts:["One column at a time: a list for each object","One row at a time: a list for each subject","As a single password"], a:"One column at a time: a list for each object",
+       why:"ACLs belong to objects (columns). Capability tickets belong to subjects (rows).", hint:"When you tapped a file name, which way did the highlight go?"}
+    ],
+    onDone: () => { qDone = true; chk(); }
+  });
+}
+
+function act_refmon(root, api){
+  let gameDone = false, propDone = false;
+  root.innerHTML = `<p class="small muted">You are the reference monitor. Use this policy (the access matrix) for every request.</p>
+    ${matrixHTML(false)}
+    <h4 class="part">Part A: decide each request</h4><div id="rg"></div>
+    <h4 class="part">Part B: which property is broken?</h4><div id="rp"></div>`;
+  const A = "✅ Allow", D = "⛔ Deny";
+  const req = (s,a,o) => `<span class="attr">🙋 <b>${s}</b></span> wants to <span class="attr">🔑 <b>${a}</b></span> <span class="attr">📁 <b>${o}</b></span>`;
+  function chk(){ if(gameDone && propDone) api.complete(); }
+  choiceQuiz(root.querySelector("#rg"), {
+    options:[A, D],
+    hint:"Look up the exact cell in the matrix. If the right isn’t listed, the answer is Deny.",
+    items:[
+      {q:req("Ali","read","notes.pdf"), a:A, why:"Ali’s cell for notes.pdf includes Read."},
+      {q:req("Ali","write","marks.xlsx"), a:D, why:"Ali has no rights at all on marks.xlsx. Imagine if students could edit their own marks!"},
+      {q:req("Dr. Noor","write","marks.xlsx"), a:A, why:"Teachers enter marks, so her cell includes Write."},
+      {q:req("Sara","read","ali_assignment.docx"), a:D, why:"Sara’s cell is empty. Ali’s assignment is protected from copying."},
+      {q:req("Backup process","read","ali_assignment.docx"), a:A, why:"The backup process has Read on every file it must copy."},
+      {q:req("Backup process","write","marks.xlsx"), a:D, why:"Backup only needs Read. Giving it Write would break least privilege."}
+    ],
+    onDone: () => { gameDone = true; chk(); }
+  });
+  const CM = "Complete mediation", IS = "Isolation (tamperproof)", VE = "Verifiability";
+  choiceQuiz(root.querySelector("#rp"), {
+    options:[CM, IS, VE],
+    hint:"Every request checked = complete mediation. Can’t be changed = isolation. Small enough to prove correct = verifiability.",
+    items:[
+      {q:"A program finds a trick to read files straight from the disk, skipping the reference monitor.", a:CM, why:"Complete mediation means <b>every</b> access must go through the check. No side doors."},
+      {q:"Malware rewrites the reference monitor’s code so that it always answers Allow.", a:IS, why:"Isolation means the monitor must be protected from tampering."},
+      {q:"The reference monitor is two million lines of code, so nobody can test that it is correct.", a:VE, why:"Verifiability means it must be small and simple enough to analyse and test."}
+    ],
+    onDone: () => { propDone = true; chk(); }
+  });
+}
+
+function act_principles(root, api){
+  const LP = "Least privilege", SD = "Separation of duties", FS = "Fail-safe defaults (default deny)";
+  choiceQuiz(root, {
+    options:[LP, SD, FS],
+    hint:"Least privilege = only what the job needs. Separation of duties = split a sensitive task between people. Fail-safe = if no rule says yes, the answer is no.",
+    items:[
+      {q:"A lab assistant can restart lab PCs but cannot change exam marks.", a:LP, why:"They get only the permissions their job needs."},
+      {q:"The person who enters marks cannot also approve and publish them.", a:SD, why:"Splitting the task means one person can’t cheat alone."},
+      {q:"A new staff account starts with no access until permissions are granted.", a:FS, why:"Start from “deny everything” and add only what is needed."},
+      {q:"An intern updating website text gets editor access to the website only, not admin rights on the server.", a:LP, why:"Admin rights aren’t needed for editing text, so they aren’t given."},
+      {q:"A payment over Rs 100,000 needs one person to request it and a different person to approve it.", a:SD, why:"Two people must cooperate, which makes fraud much harder."},
+      {q:"The firewall blocks every connection unless a rule specifically allows it.", a:FS, why:"When in doubt, deny. Mistakes then fail safely instead of opening a hole."}
+    ],
+    onDone: api.complete
+  });
+}
+
+/* ---------- Activities: Lesson 2 ---------- */
+const MODEL_CARDS = [
+  {e:"🙋", k:"DAC", name:"Discretionary", back:`<span><b>Who decides:</b> the owner of each resource.</span><span><b>Example:</b> you share your Google Doc with two classmates.</span><div class="weak">⚠️ Owners make mistakes, and rights can be passed on carelessly.</div>`},
+  {e:"🏛️", k:"MAC", name:"Mandatory", back:`<span><b>Who decides:</b> the system, by comparing security labels with clearances.</span><span><b>Example:</b> military or government secret files.</span><div class="weak">⚠️ Very strict and rigid; users can’t override it.</div>`},
+  {e:"🎭", k:"RBAC", name:"Role-based", back:`<span><b>Who decides:</b> rights are attached to roles, and users are given roles.</span><span><b>Example:</b> Student, Teacher, Exam officer in a university portal.</span><div class="weak">⚠️ Too many roles can become messy (“role explosion”).</div>`},
+  {e:"🧩", k:"ABAC", name:"Attribute-based", back:`<span><b>Who decides:</b> rules that check attributes of the user, the resource and the environment (time, place).</span><span><b>Example:</b> “CS students, on campus, 8 am to 6 pm”.</span><div class="weak">⚠️ Very flexible, but rules can get complex.</div>`}
+];
+function act_models(root, api){
+  let flipped = false, quizDone = false;
+  root.innerHTML = `<h4 class="part">Part A: meet the four models</h4><div id="fl"></div><h4 class="part">Part B: which model is it?</h4><div id="mm"></div>`;
+  function chk(){ if(flipped && quizDone) api.complete(); }
+  flipGame(root.querySelector("#fl"), MODEL_CARDS, "🎉 You’ve met all four models. The big question each answers differently: <b>who or what decides?</b>", () => { flipped = true; chk(); });
+  const opts = ["DAC","MAC","RBAC","ABAC"];
+  choiceQuiz(root.querySelector("#mm"), {
+    options:opts,
+    hint:"Who decides? The owner → DAC. Labels and clearances → MAC. Job roles → RBAC. Attributes such as time, place and department → ABAC.",
+    items:[
+      {q:"Hina owns a shared folder and chooses which classmates can open it.", a:"DAC", why:"The owner decides at her own discretion."},
+      {q:"A “Top Secret” file can only be opened by people with Top Secret clearance, and nobody can change that.", a:"MAC", why:"The system enforces labels and clearances; users can’t override it."},
+      {q:"Everyone with the Exam officer job can publish results; new staff simply get that job title.", a:"RBAC", why:"Permissions come from the role, not the individual."},
+      {q:"Doctors may open a patient file only while on duty and only inside the hospital network.", a:"ABAC", why:"The rule checks attributes: job, time (on duty) and location (network)."}
+    ],
+    onDone: () => { quizDone = true; chk(); }
+  });
+}
+
+function act_unix(root, api){
+  const who = ["Owner","Group","Others"], bits = [[0,0,0],[0,0,0],[0,0,0]], vals = [4,2,1], letters = ["r","w","x"];
+  const missions = [
+    {t:"📝 Make <code>notes.txt</code> private: the owner can read and write; nobody else can do anything.", target:"600", file:"notes.txt"},
+    {t:"⚙️ For the script <code>report.sh</code>: the owner can do everything; the group can read and execute; others get nothing.", target:"750", file:"report.sh"},
+    {t:"🌐 For the public page <code>index.html</code>: the owner can read and write; the group and everyone else can only read.", target:"644", file:"index.html"}
+  ];
+  let mi = 0;
+  root.innerHTML = `<div class="mission" id="ms"></div>
+    <div class="perm">
+      <span></span>${["Read (4)","Write (2)","Execute (1)"].map(h=>`<span class="ph">${h}</span>`).join("")}
+      ${who.map((w,i)=>`<span class="rh">${w}</span>${[0,1,2].map(j=>`<button class="pbtn" data-i="${i}" data-j="${j}" aria-pressed="false" aria-label="${w} ${letters[j]}">${letters[j]}</button>`).join("")}`).join("")}
+    </div>
+    <div class="permout">
+      <div class="stat"><div class="k">Symbolic (what <code>ls -l</code> shows)</div><div class="v mono" id="sym"></div></div>
+      <div class="stat"><div class="k">Octal</div><div class="v mono" id="oct"></div></div>
+      <div class="stat"><div class="k">Command</div><div class="v mono" id="cmd"></div></div>
+    </div>
+    <div class="tasks">${missions.map((m,k)=>`<div class="task" id="um${k}"><span class="tick">✓</span>Mission ${k+1}: ${m.file} → ${m.target}</div>`).join("")}</div>
+    <div id="ufb" aria-live="polite"></div>`;
+  const ms = root.querySelector("#ms"), fb = root.querySelector("#ufb");
+  function octal(){ return bits.map(r => r.reduce((s,b,j)=>s + (b?vals[j]:0),0)).join(""); }
+  function draw(){
+    const sym = "-" + bits.map(r => r.map((b,j)=>b?letters[j]:"-").join("")).join("");
+    root.querySelector("#sym").textContent = sym;
+    root.querySelector("#oct").textContent = octal();
+    const f = mi < missions.length ? missions[mi].file : "file";
+    root.querySelector("#cmd").textContent = `chmod ${octal()} ${f}`;
+    ms.innerHTML = mi < missions.length ? `<b>Mission ${mi+1} of 3:</b> ${missions[mi].t}` : `<b>🎉 All missions complete!</b> You can keep experimenting with the buttons.`;
+  }
+  root.querySelectorAll(".pbtn").forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.i, j = +b.dataset.j; bits[i][j] = bits[i][j] ? 0 : 1; b.setAttribute("aria-pressed", bits[i][j] ? "true" : "false");
+    if(mi < missions.length && octal() === missions[mi].target){
+      root.querySelector("#um"+mi).classList.add("ok");
+      fb.innerHTML = `<div class="feedback good"><b>✓ Mission ${mi+1} complete:</b> <code>chmod ${missions[mi].target} ${missions[mi].file}</code>. Each digit is the sum of r=4, w=2, x=1 for owner, group and others.</div>`;
+      mi++;
+      if(mi === missions.length) api.complete();
+    }
+    draw();
+  }));
+  draw();
+}
+
+function act_blp(root, api){
+  const A = "✅ Allow", D = "⛔ Deny";
+  const L = {TS:"Top Secret", S:"Secret", C:"Confidential", U:"Unclassified"};
+  const req = (who, lvl, act, obj, olvl) => `<span class="attr">🙋 <b>${who}</b> <span class="lvl">${L[lvl]}</span></span> wants to <span class="attr">🔑 <b>${act}</b></span> <span class="attr">📁 <b>${obj}</b> <span class="lvl">${L[olvl]}</span></span>`;
+  choiceQuiz(root, {
+    options:[A, D],
+    hint:"Reading: allowed only at your level or <b>below</b> (no read up). Writing: allowed only at your level or <b>above</b> (no write down).",
+    items:[
+      {q:req("Captain","S","read","a training report","C"), a:A, why:"Reading <b>down</b> is fine: Secret clearance covers Confidential information."},
+      {q:req("Clerk","C","read","the battle plan","TS"), a:D, why:"<b>No read up.</b> A Confidential clerk can’t read Top Secret information."},
+      {q:req("General","TS","write","the public notice board","U"), a:D, why:"<b>No write down.</b> Top Secret knowledge could leak into a public notice."},
+      {q:req("Analyst","S","write","a report for the director","TS"), a:A, why:"Writing <b>up</b> is allowed: information only flows to a higher level, so nothing leaks."},
+      {q:req("Intern","U","read","the canteen menu","U"), a:A, why:"Same level, so reading is fine."},
+      {q:req("Officer","S","write","an operations file","S"), a:A, why:"Same level, so writing is fine."}
+    ],
+    onDone: api.complete
+  });
+}
+
+function act_rbac(root, api){
+  let sorted = false, qDone = false;
+  root.innerHTML = `<h4 class="part">Part A: give each permission to the right role</h4><div id="rs"></div><h4 class="part">Part B: RBAC in action</h4><div id="rq"><p class="muted small">Finish Part A first.</p></div>`;
+  function chk(){ if(sorted && qDone) api.complete(); }
+  sortGame(root.querySelector("#rs"), {
+    buckets:[
+      {id:"st", e:"🎓", label:"Student", sub:"learns and submits work"},
+      {id:"te", e:"🧑‍🏫", label:"Teacher", sub:"teaches and grades a course"},
+      {id:"ex", e:"🗂️", label:"Exam officer", sub:"runs exams and results"}
+    ],
+    tips:{ st:"This is something a learner needs to do.", te:"This is part of running and grading a course.", ex:"This is about the whole exam system, not one course." },
+    items:[
+      {t:"Submit assignments", f:"st"}, {t:"View own marks", f:"st"}, {t:"Register for courses", f:"st"},
+      {t:"Upload lecture notes", f:"te"}, {t:"Enter marks for own course", f:"te"}, {t:"Create quizzes", f:"te"},
+      {t:"Publish final results", f:"ex"}, {t:"Generate transcripts", f:"ex"}, {t:"Schedule exam halls", f:"ex"}
+    ]
+  }, () => {
+    sorted = true; root.querySelector("#rq").innerHTML = "";
+    choiceQuiz(root.querySelector("#rq"), {
+      shuffle:true,
+      items:[
+        {q:"Hiba has only the Student role. Can she enter marks?", opts:["No: that permission belongs to the Teacher role","Yes: every user can enter marks","Yes, if she asks politely"], a:"No: that permission belongs to the Teacher role",
+         why:"In RBAC users get permissions <b>only</b> through their roles."},
+        {q:"Dr. Noor moves from teaching to the exam office. What is the RBAC way to update her access?", opts:["Remove the Teacher role and assign the Exam officer role","Edit 40 separate file permissions by hand","Give her an administrator account"], a:"Remove the Teacher role and assign the Exam officer role",
+         why:"Changing two role assignments updates everything at once. That’s why organisations love RBAC."},
+        {q:"Why might the university make Teacher and Exam officer <b>mutually exclusive</b> roles for the same course?", opts:["So one person can’t both enter and publish the same marks","Because teachers dislike paperwork","To save database space"], a:"So one person can’t both enter and publish the same marks",
+         why:"This RBAC constraint enforces separation of duties."}
+      ],
+      onDone: () => { qDone = true; chk(); }
+    });
+  });
+}
+
+function act_abac(root, api){
+  const A = "✅ Allow", D = "⛔ Deny";
+  const r = (o) => `<div><b>${o.n}</b> requests the <b>${o.md}</b> lab manual</div><div class="attrs">
+    <span class="attr">user.role = <b>${o.role}</b></span><span class="attr">user.department = <b>${o.dept}</b></span>
+    <span class="attr">manual.department = <b>${o.md}</b></span><span class="attr">time = <b>${o.t}</b></span><span class="attr">network = <b>${o.net}</b></span></div>`;
+  choiceQuiz(root, {
+    options:[A, D],
+    hint:"Check all four conditions one by one. If even one fails, the answer is Deny.",
+    items:[
+      {q:r({n:"Hiba", role:"Student", dept:"CS", md:"CS", t:"10:30", net:"Campus"}), a:A, why:"All four conditions pass: role, matching department, office hours, campus network."},
+      {q:r({n:"Umair", role:"Student", dept:"CS", md:"Telecom", t:"11:00", net:"Campus"}), a:D, why:"Department mismatch: a CS student is asking for the Telecom manual."},
+      {q:r({n:"Sana", role:"Student", dept:"CS", md:"CS", t:"23:15", net:"Home"}), a:D, why:"Two environment attributes fail: it’s outside 08:00–18:00, and she isn’t on the campus network."},
+      {q:r({n:"Dr. Noor", role:"Teacher", dept:"CS", md:"CS", t:"09:00", net:"Campus"}), a:A, why:"Teachers are included in the rule, and every other condition passes."},
+      {q:r({n:"Visitor", role:"Guest", dept:"None", md:"CS", t:"10:00", net:"Campus"}), a:D, why:"The role Guest is not Student or Teacher, so the first condition fails."},
+      {q:r({n:"Ali", role:"Student", dept:"CS", md:"CS", t:"14:00", net:"Home"}), a:D, why:"Everything passes except the network: he’s at home, not on campus."}
+    ],
+    onDone: api.complete
+  });
+}
+
+/* ---------- Activities: Lesson 3 ---------- */
+function act_icam(root, api){
+  sortGame(root, {
+    buckets:[
+      {id:"id", e:"🪪", label:"Identity management", sub:"who the person is"},
+      {id:"cr", e:"💳", label:"Credential management", sub:"the cards, keys and certificates"},
+      {id:"ac", e:"🚪", label:"Access management", sub:"what they may use"},
+      {id:"fe", e:"🤝", label:"Identity federation", sub:"trust between organisations"}
+    ],
+    tips:{ id:"This is about creating, updating or ending a person’s digital identity.", cr:"This is about an object or certificate that proves the identity.", ac:"This is about rights, roles or policies for resources.", fe:"This involves a different, trusted organisation." },
+    items:[
+      {t:"Creating a digital identity for a newly admitted student", f:"id"}, {t:"Updating a student’s department after a transfer", f:"id"}, {t:"Ending the digital identity of a staff member who left", f:"id"},
+      {t:"Printing and issuing a smart ID card", f:"cr"}, {t:"Revoking a lost ID card", f:"cr"}, {t:"Renewing an expired digital certificate", f:"cr"},
+      {t:"Granting a teacher access to the grading portal", f:"ac"}, {t:"Writing the policy for what Exam officers may open", f:"ac"},
+      {t:"Using your university account to log in to a partner university’s library", f:"fe"}, {t:"Accepting identities issued by another trusted organisation", f:"fe"}
+    ]
+  }, api.complete);
+}
+
+function act_lifecycle(root, api){
+  choiceQuiz(root, {
+    shuffle:true,
+    hint:"Joiners need just enough access, movers swap old access for new, and leavers lose access straight away.",
+    items:[
+      {q:"🟢 <b>Joiner:</b> Hiba joins the university as a new BSCYS student.", a:"Create her identity and assign the Student role",
+       opts:["Create her identity and assign the Student role","Copy a senior student’s account for her","Give her admin rights until she settles in"],
+       why:"Start with a fresh identity and only the access her role needs."},
+      {q:"🔵 <b>Mover:</b> Umair becomes a teaching assistant but is still a student.", a:"Add the TA role and keep the Student role",
+       opts:["Add the TA role and keep the Student role","Give him the full Teacher role","Make a second, separate account and share the password"],
+       why:"He legitimately needs both roles now, but only those two."},
+      {q:"🔵 <b>Mover:</b> Dr. Noor moves from the CS department to Telecom.", a:"Remove her CS access and add Telecom access",
+       opts:["Remove her CS access and add Telecom access","Add Telecom access and keep CS access, just in case","Do nothing until she complains"],
+       why:"Keeping old access “just in case” causes <b>privilege creep</b>: rights pile up over the years."},
+      {q:"🔴 <b>Leaver:</b> Sana graduates and leaves the university.", a:"Disable her account and remove her access promptly",
+       opts:["Disable her account and remove her access promptly","Leave the account active for a few years","Change only her password"],
+       why:"Forgotten accounts of people who left (<b>orphan accounts</b>) are a favourite target for attackers."},
+      {q:"🔴 <b>Leaver:</b> An angry employee is dismissed suddenly.", a:"Disable all access immediately, before or during the exit meeting",
+       opts:["Disable all access immediately, before or during the exit meeting","Disable it at the end of the month","Ask them to log out themselves"],
+       why:"High-risk leavers must lose access at once, before they can cause damage."}
+    ],
+    onDone: api.complete
+  });
+}
+
+const CRED_EVENTS = [
+  {t:"<b>Sponsorship:</b> the head of department confirms a new staff member needs a credential.", phase:"Step 1", clue:"someone with authority must first <b>request</b> the credential."},
+  {t:"<b>Enrollment:</b> the person registers; identity documents are checked and a photo and fingerprints are captured.", phase:"Step 2", clue:"before making anything, the person must <b>register</b> and prove who they are."},
+  {t:"<b>Production:</b> the credential is created, for example the card is printed and its chip loaded with keys.", phase:"Step 3", clue:"now the credential must be <b>made</b>."},
+  {t:"<b>Issuance:</b> the credential is handed over to the person and activated.", phase:"Step 4", clue:"the finished card must be <b>given</b> to its owner."},
+  {t:"<b>Maintenance:</b> over its lifetime the credential is renewed, suspended, revoked or replaced.", phase:"Step 5", clue:"what happens during the rest of the card’s <b>life</b>?"}
+];
+function act_cred(root, api){
+  let ordered = false, qDone = false;
+  root.innerHTML = `<div id="og"></div><h4 class="part">Quick check</h4><div id="cq"><p class="muted small">Finish the timeline first.</p></div>`;
+  function chk(){ if(ordered && qDone) api.complete(); }
+  orderGame(root.querySelector("#og"), CRED_EVENTS, "🎉 Perfect: sponsorship, enrollment, production, issuance, maintenance.", () => {
+    ordered = true; root.querySelector("#cq").innerHTML = "";
+    choiceQuiz(root.querySelector("#cq"), {
+      shuffle:true,
+      items:[
+        {q:"Your smart ID card is lost on the bus. Which stage handles this?", opts:["Maintenance: revoke the old card and issue a replacement","Sponsorship","Enrollment"], a:"Maintenance: revoke the old card and issue a replacement",
+         why:"Revocation stops the lost card working, so whoever finds it can’t use it."},
+        {q:"Why must the lost card be <b>revoked</b>, not just replaced?", opts:["Otherwise the old card would still open doors for whoever finds it","Revoking is cheaper than printing","Revoking changes your roll number"], a:"Otherwise the old card would still open doors for whoever finds it",
+         why:"A replacement alone leaves two working cards: yours and the finder’s."}
+      ],
+      onDone: () => { qDone = true; chk(); }
+    });
+  });
+}
+
+function act_review(root, api){
+  const ROWS = [
+    {who:"Hiba", info:"BSCYS student, currently enrolled", perm:"Course portal", ans:"keep", why:"She is an active student who needs it."},
+    {who:"Sana", info:"Graduated last June", perm:"Course portal", ans:"rev", why:"A leaver’s orphan account. Remove it."},
+    {who:"Dr. Noor", info:"Moved from CS to Telecom", perm:"CS grading system", ans:"rev", why:"Old access after a move is privilege creep."},
+    {who:"Dr. Noor", info:"Moved from CS to Telecom", perm:"Telecom grading system", ans:"keep", why:"This matches her new job."},
+    {who:"Bilal", info:"Intern who updates website text", perm:"Server administrator (root)", ans:"rev", why:"Far more than the task needs: breaks least privilege."},
+    {who:"Bilal", info:"Intern who updates website text", perm:"Website content editor", ans:"keep", why:"Exactly what the task needs."},
+    {who:"Ayesha", info:"Exam officer", perm:"Publish final results", ans:"keep", why:"This is her job."},
+    {who:"Ayesha", info:"Exam officer", perm:"Enter marks for every course", ans:"rev", why:"Entering and publishing marks should be split: separation of duties."}
+  ];
+  const choice = ROWS.map(() => null);
+  root.innerHTML = `<p class="small muted">You are doing the quarterly access review. Mark each permission <b>Keep</b> or <b>Revoke</b>, then check your review.</p>
+    <div class="reviews">${ROWS.map((r,i)=>`<div class="review-row" id="rr${i}">
+      <div><b>${r.who}</b> <span class="small muted">(${r.info})</span><br>🔑 ${r.perm}</div>
+      <div class="seg" role="group" aria-label="Decision for ${r.who}, ${r.perm}"><button class="keep" data-i="${i}" data-v="keep">✓ Keep</button><button class="rev" data-i="${i}" data-v="rev">✕ Revoke</button></div>
+      <div class="why" hidden></div></div>`).join("")}</div>
+    <div class="row wrap" style="margin-top:12px"><button class="btn" id="rv">Check my review</button></div>
+    <div id="rfb" aria-live="polite"></div>`;
+  root.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.i; choice[i] = b.dataset.v;
+    b.parentNode.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    const row = root.querySelector("#rr"+i); row.classList.remove("right","wrong"); row.querySelector(".why").hidden = true;
+  }));
+  root.querySelector("#rv").addEventListener("click", () => {
+    const fb = root.querySelector("#rfb");
+    const missing = choice.filter(c => !c).length;
+    if(missing){ fb.innerHTML = `<div class="feedback">Decide on every row first (${missing} still open).</div>`; return; }
+    let right = 0;
+    ROWS.forEach((r,i) => {
+      const row = root.querySelector("#rr"+i), ok = choice[i] === r.ans, w = row.querySelector(".why");
+      row.classList.toggle("right", ok); row.classList.toggle("wrong", !ok);
+      w.hidden = false; w.innerHTML = ok ? `✓ ${r.why}` : `✗ Think again: is this permission still needed for ${r.who}’s current job?`;
+      if(ok) right++;
+    });
+    if(right === ROWS.length){
+      fb.innerHTML = `<div class="feedback good">🎉 Perfect review! You removed a leaver’s access, cleaned up privilege creep and enforced least privilege and separation of duties.</div>`;
+      api.complete();
+    } else fb.innerHTML = `<div class="feedback bad">${right} of ${ROWS.length} correct. Fix the red rows and check again.</div>`;
+  });
+}
+
+function act_federation(root, api){
+  const script = [
+    {cls:"l", dir:"👩‍🎓 Hiba ──▶ 📚 Partner library", pay:"“I’d like to read this journal article.”", note:"The library (the service provider) doesn’t have an account for Hiba."},
+    {cls:"r", dir:"📚 Library ──▶ 👩‍🎓 Hiba", pay:"“Please sign in with your home university.”", note:"Her browser is redirected to the university’s identity provider (IdP)."},
+    {cls:"l", dir:"👩‍🎓 Hiba ──▶ 🏛️ University IdP", pay:"Username + password + OTP", note:"She authenticates <b>only</b> at her own university. The library never sees her password."},
+    {cls:"c", dir:"🏛️ University IdP checks", pay:"✔ Credentials correct. Creating a digitally signed <b>assertion</b>.", note:"The assertion says: “This is Hiba, a current BSCYS student.”"},
+    {cls:"r", dir:"🏛️ IdP ──▶ (via browser) ──▶ 📚 Library", pay:"Signed assertion: name = Hiba, status = current student", note:"Only the attributes the library needs are shared."},
+    {cls:"ok", dir:"📚 Library checks", pay:"✔ Signature valid, and we trust this IdP under our federation agreement. Access granted.", note:"Trust between the organisations is what makes federation work."},
+    {cls:"ok", dir:"✨ Single sign-on, later that day", pay:"Hiba opens the e-learning site and is let in without typing her password again.", note:"Her session at the IdP is reused. This is <b>single sign-on (SSO)</b>."}
+  ];
+  let step = 0, simDone = false, qDone = false;
+  root.innerHTML = `<div class="actors"><div>👩‍🎓 Hiba’s browser</div><div>🏛️ University IdP</div><div>📚 Partner library</div></div>
+    <div class="seq" id="seq"></div>
+    <div class="row wrap" style="margin-top:12px"><button class="btn" id="nx">▶ Next step</button><button class="btn btn-ghost btn-sm" id="rs">↺ Restart</button></div>
+    <div id="fq" hidden><h4 class="part">Quick check</h4><div id="fqq"></div></div>`;
+  const seq = root.querySelector("#seq"), nx = root.querySelector("#nx");
+  function label(){ nx.disabled = step >= script.length; nx.textContent = step >= script.length ? "✓ Story finished" : "▶ Next step"; }
+  function chk(){ if(simDone && qDone) api.complete(); }
+  nx.addEventListener("click", () => {
+    const s = script[step]; if(!s) return;
+    const m = el(`<div class="msg ${s.cls}"><div class="dir">${s.dir}</div><div class="pay">${s.pay}</div><div class="note">${s.note}</div></div>`);
+    seq.appendChild(m); try{ m.scrollIntoView({block:"nearest", behavior: reduceMotion ? "auto" : "smooth"}); }catch(e){}
+    step++; label();
+    if(step >= script.length && !simDone){
+      simDone = true; root.querySelector("#fq").hidden = false;
+      choiceQuiz(root.querySelector("#fqq"), {
+        shuffle:true,
+        items:[
+          {q:"In this story, who checked Hiba’s password?", opts:["Only her university’s identity provider","The partner library","Both the library and the university"], a:"Only her university’s identity provider",
+           why:"The library relies on the IdP’s signed assertion, so the password stays at home."},
+          {q:"Why did the library accept the assertion?", opts:["It was digitally signed by an IdP the library trusts","Hiba typed it herself","Libraries accept everyone"], a:"It was digitally signed by an IdP the library trusts",
+           why:"A federation agreement (trust framework) plus a digital signature makes the assertion believable."},
+          {q:"What is the biggest risk of single sign-on?", opts:["One stolen account can open many services, so protect it with MFA","Users must remember more passwords","Logins become slower"], a:"One stolen account can open many services, so protect it with MFA",
+           why:"SSO concentrates risk in one account, which is why strong authentication at the IdP matters."}
+        ],
+        onDone: () => { qDone = true; chk(); }
+      });
+    }
+  });
+  root.querySelector("#rs").addEventListener("click", () => { step = 0; seq.innerHTML = ""; label(); });
+  label();
+}
+
+/* ---------- Modules ---------- */
+const MODULES = [
+{
+  title:"Access Control Principles and the Reference Monitor", icon:"🚪",
+  blurb:"Where access control fits after authentication, its building blocks, and the guard that checks every request.",
+  takeaways:[
+    "Authentication proves who you are; access control decides what you may do; auditing records what happened.",
+    "Every rule involves a subject, an object and an access right, and can be drawn as an access matrix.",
+    "ACLs store the matrix by object (columns); capability lists store it by subject (rows).",
+    "A reference monitor must give complete mediation, be isolated (tamperproof) and be verifiable.",
+    "Least privilege, separation of duties and fail-safe defaults guide good policies."
+  ],
+  steps:[
+    { title:"Where access control fits",
+      concept:`<p><b>Authentication</b> answers “Who are you?”. <b>Access control</b> answers the next question: “What are you allowed to do?”. Formally, access control lets only authorised users, programs and processes use a system’s resources, and only in the ways the security policy allows.</p>
+        <div class="flowline"><div class="fbox"><b>🔐 Authentication</b><span class="small">Prove who you are</span></div><span class="arr">▶</span>
+        <div class="fbox hi"><b>🚪 Access control</b><span class="small">Check each request against the rules</span></div><span class="arr">▶</span>
+        <div class="fbox"><b>📒 Auditing</b><span class="small">Record what happened</span></div></div>
+        <p>Behind the scenes, a <b>security administrator</b> keeps an <b>authorization database</b>: the rules saying who may do what.</p>
+        <p class="analogy">🏫 <b>Campus analogy:</b> showing your ID card at the gate is authentication. The guard checking whether your card opens the exam office is access control. The visitor register is auditing.</p>`,
+      key:"Authentication = <b>who</b>. Authorization and access control = <b>what you may do</b>. Auditing = <b>what you did</b>.",
+      task:"Read each situation and choose which part of the system is at work.",
+      hints:["Passwords, fingerprints and OTPs are always authentication.","Logs and reviews of past events are auditing. Setting up rules is authorization; checking a live request is the access control decision."],
+      activity:act_aaa },
+    { title:"Subjects, objects and access rights",
+      concept:`<p>Every access control rule has three parts:</p>
+        <div class="roles">
+          <div class="role"><b>🙋 Subject</b>An active entity that asks for access: a user, or a program running for a user. Subjects are often grouped as <b>owner</b>, <b>group</b> and <b>world</b> (everyone else).</div>
+          <div class="role"><b>📁 Object</b>A resource that is protected: a file, folder, printer, database table or even a program.</div>
+          <div class="role"><b>🔑 Access right</b>The way a subject may use an object: read, write, execute, delete, create or search.</div>
+        </div>`,
+      key:"A rule reads like a sentence: <b>subject</b> may <b>right</b> the <b>object</b>. For example: “Dr. Noor may write marks.xlsx”.",
+      task:"Tap an item, then tap the box it belongs to. Sort all 12.",
+      hints:["Subjects do things, objects have things done to them, and access rights are the verbs.","A running program counts as a subject because it acts on behalf of a user."],
+      activity:act_soar },
+    { title:"The access matrix, ACLs and capabilities",
+      concept:`<p>An <b>access matrix</b> is a table: subjects down the side, objects across the top, and each cell lists the rights that subject has on that object.</p>
+        <p>Real systems rarely store the whole table, because most cells are empty. Instead they store it in slices:</p>
+        <div class="two-col"><div class="mini"><div class="mini-h">📋 Access control list (ACL)</div>One <b>column</b>: for each object, the list of who may do what. Easy to answer “Who can open this file?”.</div>
+        <div class="mini"><div class="mini-h">🎟️ Capability list</div>One <b>row</b>: for each subject, the list of what it may access. Easy to answer “What can this user open?”.</div></div>`,
+      key:"ACL = column, attached to the object. Capability list = row, carried by the subject.",
+      task:"Open one ACL and one capability list, then answer five questions by reading the matrix.",
+      hints:["Tap a file name at the top to see its ACL, and a person on the left to see their capability list.","An empty cell (—) means no rights at all."],
+      activity:act_matrix },
+    { title:"The reference monitor",
+      concept:`<p>The <b>reference monitor</b> is the part of the system that checks <b>every</b> request against the rules before letting it reach the object. In an operating system it lives in the protected core, the <b>security kernel</b>.</p>
+        <div class="flowline"><div class="fbox"><b>🙋 Subject</b><span class="small">makes a request</span></div><span class="arr">▶</span>
+        <div class="fbox hi"><b>🛡️ Reference monitor</b><span class="small">checks the policy</span></div><span class="arr">▶</span>
+        <div class="fbox"><b>📁 Object</b><span class="small">reached only if allowed</span></div></div>
+        <p>A trustworthy reference monitor has three properties:</p>
+        <div class="roles">
+          <div class="role"><b>Complete mediation</b>Every single access is checked. No side doors.</div>
+          <div class="role"><b>Isolation</b>It is tamperproof: attackers can’t change it.</div>
+          <div class="role"><b>Verifiability</b>It is small and simple enough to analyse and test.</div>
+        </div>`,
+      key:"No request reaches an object without passing the reference monitor.",
+      task:"Act as the reference monitor for six requests, then spot which property is broken in three stories.",
+      hints:["Find the subject’s row and the object’s column. If the right isn’t written there, deny.","Skipping the check breaks complete mediation; changing the monitor breaks isolation; being too big to test breaks verifiability."],
+      activity:act_refmon },
+    { title:"Principles of good access control",
+      concept:`<p>Whichever model you use, three design principles keep policies safe:</p>
+        <div class="roles">
+          <div class="role"><b>🤏 Least privilege</b>Give each user and program only the rights needed for its job, and no more.</div>
+          <div class="role"><b>👥 Separation of duties</b>Split sensitive tasks so no single person can complete them alone.</div>
+          <div class="role"><b>🚫 Fail-safe defaults</b>Start from “deny everything”; allow only what a rule explicitly permits.</div>
+        </div>`,
+      key:"Give little, split power, and say no by default.",
+      task:"Match each situation to the principle it shows.",
+      hints:["If the story is about giving fewer rights, it’s least privilege.","If two different people are needed, it’s separation of duties. If the default answer is no, it’s fail-safe defaults."],
+      activity:act_principles }
+  ]
+},
+{
+  title:"DAC, MAC, RBAC and ABAC", icon:"🧭",
+  blurb:"Four ways to decide who gets access: by owner, by label, by role and by attribute.",
+  takeaways:[
+    "DAC: the owner decides. UNIX permissions (rwx for owner, group, others) are classic DAC.",
+    "MAC: the system enforces labels and clearances; Bell–LaPadula means no read up and no write down.",
+    "RBAC: permissions belong to roles, users are assigned roles, and constraints enforce separation of duties.",
+    "ABAC: rules check attributes of the subject, the object and the environment."
+  ],
+  steps:[
+    { title:"Four models at a glance",
+      concept:`<p>An <b>access control policy</b> says who may do what. Four families of policy are used in practice, and the biggest difference between them is <b>who or what makes the decision</b>.</p>`,
+      key:"DAC = owner decides. MAC = labels decide. RBAC = roles decide. ABAC = attributes decide.",
+      task:"Flip all four cards, then pick the model behind each scenario.",
+      hints:["Tap a card to flip it; tap again to flip it back.","Who decides? The owner → DAC. Labels → MAC. Job roles → RBAC. Time, place or department → ABAC."],
+      activity:act_models },
+    { title:"DAC in practice: UNIX permissions",
+      concept:`<p>In <b>discretionary access control</b> the owner of a file decides who may use it. UNIX and Linux are the classic example: every file has an <b>owner</b>, a <b>group</b> and “<b>others</b>” (everyone else), and each of the three gets read, write and execute bits.</p>
+        <div class="two-col"><div class="mini"><div class="mini-h">Symbolic form</div><code>-rwxr-x---</code> means owner rwx, group r-x, others nothing.</div>
+        <div class="mini"><div class="mini-h">Octal form</div>Add r = 4, w = 2, x = 1 for each group of three: rwx = 7, r-x = 5, --- = 0, so <code>750</code>.</div></div>
+        <p class="small muted">The superuser (root) is exempt from these checks, which is exactly why root access must be guarded so carefully.</p>`,
+      key:"Owner decides. Each permission digit = read 4 + write 2 + execute 1.",
+      task:"Use the buttons to set the permissions for three missions. Watch the symbolic and octal forms change.",
+      hints:["Work out one digit at a time. 6 = read + write. 5 = read + execute. 4 = read only.","600 = owner rw, nobody else anything. 750 = owner rwx, group r-x. 644 = owner rw, everyone else r."],
+      activity:act_unix },
+    { title:"MAC: labels and clearances",
+      concept:`<p>In <b>mandatory access control</b> the system decides, and users cannot override it. Every object gets a <b>security label</b> and every user a <b>clearance</b>:</p>
+        <div class="ladder"><div class="rung">Top Secret <span>🔴</span></div><div class="rung">Secret <span>🟠</span></div><div class="rung">Confidential <span>🟡</span></div><div class="rung">Unclassified <span>⚪</span></div></div>
+        <p>The famous <b>Bell–LaPadula</b> model protects secrecy with two rules:</p>
+        <div class="two-col"><div class="mini"><div class="mini-h">📖 No read up</div>You may read only at your level or below.</div>
+        <div class="mini"><div class="mini-h">✍️ No write down</div>You may write only at your level or above, so secrets never leak downward.</div></div>`,
+      key:"Read down, write up: information can only flow upward to safer levels.",
+      task:"Decide whether each request is allowed under Bell–LaPadula.",
+      hints:["Compare the person’s clearance with the file’s label. For reading, the file must be at the same level or lower.","For writing, the file must be at the same level or higher. Writing up feels odd, but it can’t leak secrets."],
+      activity:act_blp },
+    { title:"RBAC: role-based access control",
+      concept:`<p>In <b>role-based access control</b> permissions are attached to <b>roles</b> (job functions), and users are assigned to roles. When someone changes jobs, you change their roles, not hundreds of individual permissions.</p>
+        <div class="flowline"><div class="fbox"><b>👤 Users</b><span class="small">Hiba, Dr. Noor, Ayesha</span></div><span class="arr">▶</span>
+        <div class="fbox hi"><b>🎭 Roles</b><span class="small">Student, Teacher, Exam officer</span></div><span class="arr">▶</span>
+        <div class="fbox"><b>🔑 Permissions</b><span class="small">submit work, enter marks, publish results</span></div></div>
+        <p>RBAC can also include <b>role hierarchies</b> (a senior role inherits a junior role’s permissions) and <b>constraints</b>, such as mutually exclusive roles that one person may not hold together.</p>`,
+      key:"Users → roles → permissions. Change the role, and all the permissions follow.",
+      task:"Give each permission to the right role, then answer three RBAC questions.",
+      hints:["Ask: which job needs this permission to do its daily work?","Mutually exclusive roles are RBAC’s way of enforcing separation of duties."],
+      activity:act_rbac },
+    { title:"ABAC: attribute-based access control",
+      concept:`<p>In <b>attribute-based access control</b> a rule checks <b>attributes</b> (properties) at the moment of the request:</p>
+        <div class="roles">
+          <div class="role"><b>🙋 Subject attributes</b>role, department, year of study</div>
+          <div class="role"><b>📁 Object attributes</b>department, type, sensitivity</div>
+          <div class="role"><b>🌍 Environment attributes</b>time of day, location, network, device</div>
+        </div>
+        <div class="analogy" style="margin-top:12px"><b>📜 Today’s policy:</b> ALLOW downloading a lab manual IF user.role is Student or Teacher AND user.department = manual.department AND the time is between 08:00 and 18:00 AND the network is Campus.</div>`,
+      key:"ABAC asks many small questions at once, so it can express very precise rules.",
+      task:"Evaluate each request against the policy and decide Allow or Deny.",
+      hints:["Check the four conditions in order: role, department match, time, network.","One failing condition is enough to deny."],
+      activity:act_abac }
+  ]
+},
+{
+  title:"Identity, Credential and Access Management", icon:"🪪",
+  blurb:"How organisations manage identities, cards and rights over time, and share trust with partners.",
+  takeaways:[
+    "ICAM has four parts: identity management, credential management, access management and identity federation.",
+    "Joiners, movers and leavers each need careful handling to avoid privilege creep and orphan accounts.",
+    "Credentials go through sponsorship, enrollment, production, issuance and maintenance.",
+    "Federation lets a trusted identity provider vouch for users, enabling single sign-on, so the home account must be strongly protected."
+  ],
+  steps:[
+    { title:"What is ICAM?",
+      concept:`<p><b>Identity, Credential and Access Management (ICAM)</b> is an organisation-wide approach to managing digital identities, the credentials that prove them, and the access they are given. It has four parts:</p>
+        <div class="roles">
+          <div class="role"><b>🪪 Identity management</b>Creating a digital identity with attributes (name, roll number, department), keeping it up to date, and ending it.</div>
+          <div class="role"><b>💳 Credential management</b>Issuing and looking after the things that prove the identity: smart cards, keys, certificates.</div>
+          <div class="role"><b>🚪 Access management</b>Managing resources, privileges and policies: who may use what.</div>
+          <div class="role"><b>🤝 Identity federation</b>Trusting identities created by other organisations.</div>
+        </div>`,
+      key:"Identity = who you are. Credential = what proves it. Access = what you may use. Federation = trust between organisations.",
+      task:"Sort the ten tasks into the four parts of ICAM.",
+      hints:["Anything about cards or certificates is credential management.","Anything involving another organisation is identity federation."],
+      activity:act_icam },
+    { title:"The identity lifecycle: joiners, movers, leavers",
+      concept:`<p>Identities change over time. IT teams use a simple model:</p>
+        <div class="flowline"><div class="fbox"><b>🟢 Joiner</b><span class="small">Create the identity and give starting access</span></div><span class="arr">▶</span>
+        <div class="fbox"><b>🔵 Mover</b><span class="small">Change roles: add new access, remove old</span></div><span class="arr">▶</span>
+        <div class="fbox"><b>🔴 Leaver</b><span class="small">Disable and remove all access</span></div></div>
+        <p>Two classic mistakes: <b>privilege creep</b> (movers keep old rights, which pile up over the years) and <b>orphan accounts</b> (leavers’ accounts nobody disabled).</p>`,
+      key:"Every change in a person’s job should change their access too.",
+      task:"You are the IT administrator. Choose the right action for each lifecycle event.",
+      hints:["For movers, the safe pattern is: add the new, remove the old.","For leavers, speed matters. Delay gives attackers a window."],
+      activity:act_lifecycle },
+    { title:"Credential management",
+      concept:`<p>A <b>credential</b> binds an identity to something the person holds, such as a smart ID card containing keys and a certificate. Credentials follow a lifecycle of their own, from the first request until they are revoked.</p>
+        <p class="analogy">🪪 Think of how you received your university smart card, and what happens when one is lost.</p>`,
+      key:"Sponsorship → enrollment → production → issuance → maintenance.",
+      task:"Put the five credential management steps in order, then answer two quick questions.",
+      hints:["Someone must first ask for the credential, then the person registers.","The card is made before it is handed over. Maintenance covers the rest of its life."],
+      activity:act_cred },
+    { title:"Access management and access reviews",
+      concept:`<p><b>Access management</b> covers three jobs: <b>resource management</b> (what needs protecting), <b>privilege management</b> (which rights each identity has) and <b>policy management</b> (the rules that decide).</p>
+        <p>Because people join, move and leave all the time, organisations run regular <b>access reviews</b>: checking every permission against each person’s current job and removing what isn’t needed.</p>`,
+      key:"An access review asks one question per permission: is it still needed for this person’s job today?",
+      task:"Review eight permissions. Mark each Keep or Revoke, then check your review.",
+      hints:["Look for leavers, people who changed departments, and access far bigger than the task.","An Exam officer who can also enter marks breaks separation of duties."],
+      activity:act_review },
+    { title:"Identity federation and single sign-on",
+      concept:`<p><b>Identity federation</b> lets one organisation trust identities managed by another. Your home university acts as the <b>identity provider (IdP)</b>; partner services, the <b>service providers</b> or relying parties, accept its word instead of creating their own accounts for you.</p>
+        <p>The IdP sends a digitally signed <b>assertion</b> (“this is Hiba, a current student”), never your password. Organisations agree on the rules in a <b>trust framework</b>. A bonus is <b>single sign-on (SSO)</b>: log in once, use many services.</p>`,
+      key:"Authenticate at home once; partners trust the signed assertion.",
+      task:"Step through Hiba’s federated login, then answer three questions.",
+      hints:["Press “Next step” to move the story forward.","Notice where the password is typed, and what the library actually receives."],
+      activity:act_federation }
+  ]
+}
+];
+
+/* ---------- Quiz ---------- */
+const QUIZ = [
+  {topic:"Lesson 1", q:"Which question does access control answer?", o:["Who are you?","What are you allowed to do?","When did you log in?","Which network are you on?"], a:1, ex:"Authentication answers “who are you?”; access control decides what you may do."},
+  {topic:"Lesson 1", q:"In access control, a file, printer or database table is called…", o:["A subject","An object","An access right","A role"], a:1, ex:"Objects are the protected resources. Subjects are the users or programs asking for access."},
+  {topic:"Lesson 1", q:"An access control list (ACL) stores the access matrix…", o:["By object: one list per column","By subject: one list per row","As a single password file","Only in the audit log"], a:0, ex:"ACLs are attached to objects (columns); capability lists are carried by subjects (rows)."},
+  {topic:"Lesson 1", q:"Which reference monitor property means every single access request must be checked?", o:["Isolation","Verifiability","Complete mediation","Encryption"], a:2, ex:"Complete mediation: no request may bypass the check."},
+  {topic:"Lesson 1", q:"Giving each user only the permissions their job needs is called…", o:["Least privilege","Separation of duties","Single sign-on","Fail-open design"], a:0, ex:"Least privilege limits the damage any one account or program can do."},
+  {topic:"Lesson 2", q:"In discretionary access control (DAC), who decides who can access a file?", o:["The file’s owner","A security label","The time of day","The role hierarchy"], a:0, ex:"In DAC the owner grants rights at their own discretion."},
+  {topic:"Lesson 2", q:"The UNIX permission 750 means…", o:["Owner rwx, group r-x, others nothing","Owner r-x, group rwx, others r","Everyone can read, write and execute","Owner rw, group r, others r"], a:0, ex:"7 = 4+2+1 (rwx), 5 = 4+1 (r-x), 0 = nothing."},
+  {topic:"Lesson 2", q:"Under the Bell–LaPadula rules, a user with Secret clearance may NOT…", o:["Read a Confidential document","Read a Top Secret document","Write to a Top Secret document","Read a Secret document"], a:1, ex:"No read up: Secret clearance cannot read Top Secret."},
+  {topic:"Lesson 2", q:"In RBAC, users receive permissions by…", o:["Being assigned roles","Owning the files","Having a security clearance","Logging in from campus"], a:0, ex:"Permissions are attached to roles, and users get roles."},
+  {topic:"Lesson 2", q:"A rule that allows access only from the campus network between 8 am and 6 pm is using…", o:["Environment attributes in ABAC","UNIX group permissions","A capability list","Bell–LaPadula labels"], a:0, ex:"Time and network location are environment attributes, the hallmark of ABAC."},
+  {topic:"Lesson 2", q:"Which model is used where users cannot change classifications, such as military systems?", o:["DAC","MAC","RBAC","Single sign-on"], a:1, ex:"Mandatory access control is enforced by the system using labels and clearances."},
+  {topic:"Lesson 3", q:"Which of these is NOT one of the four parts of ICAM?", o:["Identity management","Credential management","Network routing","Identity federation"], a:2, ex:"The four parts are identity, credential and access management, plus identity federation."},
+  {topic:"Lesson 3", q:"A teacher moves departments but keeps her old department’s access as well. This problem is called…", o:["Privilege creep","Single sign-on","Fail-safe defaults","Complete mediation"], a:0, ex:"Rights that pile up as people move jobs are privilege creep."},
+  {topic:"Lesson 3", q:"When a smart ID card is lost, revoking and replacing it belongs to which credential stage?", o:["Sponsorship","Enrollment","Production","Maintenance"], a:3, ex:"Maintenance covers renewal, suspension, revocation and replacement."},
+  {topic:"Lesson 3", q:"In identity federation, the identity provider sends the service provider…", o:["The user’s password","A signed assertion about the user","A copy of the access matrix","Nothing; the service checks the password itself"], a:1, ex:"The service trusts the IdP’s signed assertion and never sees the password."}
+];
+function gradeOf(sc){ if(sc>=13) return {g:"A", t:"Excellent"}; if(sc>=11) return {g:"B", t:"Very good"}; if(sc>=9) return {g:"C", t:"Pass"}; return {g:"–", t:"Needs revision"}; }
+
+/* ---------- Top bar & navigation ---------- */
+function renderTop(){
+  if(mode === "welcome" || !S.name){
+    topbar.innerHTML = `<div class="topbar-in"><div class="brand"><span class="brand-ic">🚪</span><span class="brand-t">Activity Lab<small>Access Control</small></span></div></div>`; return;
+  }
+  const n = doneCount(), inQuiz = mode === "quiz";
+  const initials = S.name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+  topbar.innerHTML = `<div class="topbar-in">
+    <button class="brand" id="tbHome" ${inQuiz?"disabled":""} aria-label="Go to the learning map"><span class="brand-ic">🚪</span><span class="brand-t">Activity Lab<small>Access Control</small></span></button>
+    <div class="tb-right">
+      <div class="tb-prog" title="Activities completed"><span>${n} of ${TOTAL} activities</span><div class="progress"><i style="width:${n/TOTAL*100}%"></i></div></div>
+      <div class="student"><span class="avatar">${esc(initials)}</span><span><b>${esc(S.name)}</b><small>Roll no. ${esc(S.roll)}</small></span></div>
+      ${inQuiz ? `<span class="pill warn">Quiz in progress</span>` : `<button class="btn btn-ghost btn-sm" id="tbMap">🗺️ Map</button>`}
+    </div></div>`;
+  const home = document.getElementById("tbHome"), map = document.getElementById("tbMap");
+  if(home && !inQuiz) home.addEventListener("click", () => go(screenOverview));
+  if(map) map.addEventListener("click", () => go(screenOverview));
+}
+function go(fn, ...args){ fn(...args); renderTop(); try{ window.scrollTo(0,0); }catch(e){} }
+
+/* ---------- Screens ---------- */
+function screenWelcome(){
+  mode = "welcome";
+  const has = !!S.name;
+  app.innerHTML = `<section class="screen stack">
+    <div class="card"><div class="hero-grid">
+      <div>
+        <span class="tag">🎯 Interactive activity for beginners</span>
+        <h1 style="margin-top:14px">Access Control</h1>
+        <p class="lead">After authentication proves who you are, access control decides what you may do: the reference monitor, the four models, and identity and access management.</p>
+        <ul class="hero-facts"><li>📚 3 lessons, 15 hands-on activities</li><li>💡 Free hints at every step</li><li>📝 Final quiz worth 15 marks</li><li>⏱️ About 45 to 60 minutes</li></ul>
+      </div>
+      <div class="gate" aria-hidden="true">
+        <div class="gate-h">🛡️ Reference monitor: today’s decisions</div>
+        <div class="ticket"><div><div class="who">Dr. Noor</div><div class="what">write → marks.xlsx</div></div><span class="stamp allow">ALLOW</span></div>
+        <div class="ticket"><div><div class="who">Ali (student)</div><div class="what">write → marks.xlsx</div></div><span class="stamp deny">DENY</span></div>
+        <div class="ticket"><div><div class="who">Backup process</div><div class="what">read → notes.pdf</div></div><span class="stamp allow">ALLOW</span></div>
+        <div class="ticket"><div><div class="who">Guest visitor</div><div class="what">read → exam_paper.pdf</div></div><span class="stamp deny">DENY</span></div>
+      </div>
+    </div></div>
+    <div class="card" id="who"></div>
+  </section>`;
+  const who = document.getElementById("who");
+  if(has){
+    who.innerHTML = `<h3>Welcome back, ${esc(S.name)}!</h3>
+      <p>Roll no. <b>${esc(S.roll)}</b>. You’ve completed <b>${doneCount()} of ${TOTAL}</b> activities${S.results.length ? ` and taken the quiz ${S.results.length} time${S.results.length>1?"s":""}` : ""}.</p>
+      <div class="row wrap"><button class="btn" id="cont">Continue where I left off</button><button class="btn btn-ghost" id="newst">I’m a different student</button></div>`;
+    document.getElementById("cont").addEventListener("click", () => go(screenOverview));
+    document.getElementById("newst").addEventListener("click", () => { S = fresh(); save(); go(screenWelcome); });
+  } else {
+    who.innerHTML = `<h3>Before you begin</h3><p class="muted">Your name and roll number will appear on your result card at the end.</p>
+      <div class="who-grid">
+        <div class="field"><label for="nm">Full name</label><input class="input" id="nm" maxlength="60" autocomplete="name" placeholder="e.g. Hiba Imran"></div>
+        <div class="field"><label for="rl">Roll number</label><input class="input" id="rl" maxlength="30" autocomplete="off" placeholder="e.g. 23CS045"></div>
+        <button class="btn" id="startBtn">Start the activity</button>
+      </div><div class="err" id="err" aria-live="polite"></div>`;
+    const nm = document.getElementById("nm"), rl = document.getElementById("rl"), err = document.getElementById("err");
+    function start(){
+      const n = nm.value.trim().replace(/\s+/g," "), r = rl.value.trim();
+      if(n.length < 2){ err.textContent = "Enter your full name (at least 2 letters)."; nm.focus(); return; }
+      if(r.length < 2){ err.textContent = "Enter your roll number."; rl.focus(); return; }
+      if(!/^[A-Za-z0-9\-\/_. ]+$/.test(r)){ err.textContent = "Roll numbers can use letters, numbers, dashes, slashes and dots only."; rl.focus(); return; }
+      S = fresh(); S.name = n; S.roll = r; save(); go(screenOverview);
+    }
+    document.getElementById("startBtn").addEventListener("click", start);
+    [nm, rl].forEach(x => x.addEventListener("keydown", e => { if(e.key === "Enter") start(); }));
+    nm.focus();
+  }
+}
+
+function modInfo(m){
+  const cnt = [0,1,2,3,4].filter(i => S.done[m*5+i]).length;
+  const unlocked = m === 0 || S.maxPos >= m*5 - 1;
+  const started = S.maxPos >= m*5;
+  let target = m*5; for(let i=0;i<5;i++){ if(!S.done[m*5+i]){ target = m*5+i; break; } }
+  if(target > S.maxPos + 1) target = Math.max(m*5, Math.min(S.maxPos, m*5+4));
+  return {cnt, unlocked, started, target};
+}
+
+function screenOverview(){
+  mode = "map";
+  const first = S.name.split(" ")[0], quizOpen = S.maxPos >= 14, res = S.results;
+  const best = res.length ? Math.max(...res.map(r=>r.score)) : null;
+  app.innerHTML = `<section class="screen stack">
+    <div class="card">
+      <span class="tag">👋 Hello, ${esc(first)}</span>
+      <h2 style="margin-top:12px">What this activity is about</h2>
+      <p>Logging in is only half the story. Once the university portal knows you are Hiba, it still has to decide: may Hiba see her own marks? Edit them? See everyone else’s? That second decision is <b>access control</b>, and it happens thousands of times a second inside every computer you use.</p>
+      <p>In this activity you’ll act as the <b>reference monitor</b>, set real UNIX permissions, apply military secrecy rules, design roles for a university, run an access review like an IT administrator, and follow a federated login step by step. Every button gives instant feedback, and hints are always free.</p>
+    </div>
+    <div class="card">
+      <h3>By the end, you will be able to:</h3>
+      <ol class="objectives">
+        <li>Explain how access control differs from authentication, and where auditing fits.</li>
+        <li>Identify subjects, objects and access rights, and read an access matrix, ACL and capability list.</li>
+        <li>Act as a reference monitor and explain its three properties.</li>
+        <li>Apply least privilege, separation of duties and fail-safe defaults.</li>
+        <li>Compare DAC, MAC, RBAC and ABAC, and pick the right model for a scenario.</li>
+        <li>Set UNIX file permissions in symbolic and octal form.</li>
+        <li>Apply the Bell–LaPadula rules: no read up, no write down.</li>
+        <li>Describe the four parts of ICAM and the joiner–mover–leaver lifecycle.</li>
+        <li>Spot privilege creep in an access review, and explain identity federation and single sign-on.</li>
+      </ol>
+    </div>
+    <div class="card"><h3>Your learning path</h3><p class="muted small">Lessons unlock one after another. You can return to any finished lesson.</p><div class="journey" id="journey"></div></div>
+    <div class="card">
+      <h3>How you’ll be marked</h3>
+      <div class="tablewrap"><table class="marks">
+        <thead><tr><th>Part</th><th>What it is</th><th>Marks</th></tr></thead>
+        <tbody>
+          <tr><td>Activities</td><td>15 hands-on activities across 3 lessons</td><td>Not graded; your completion count appears on your result card</td></tr>
+          <tr><td>Final quiz</td><td>15 multiple-choice questions, 1 mark each</td><td><b>15 marks</b></td></tr>
+          <tr><td>Pass mark</td><td>9 out of 15 (60%)</td><td>–</td></tr>
+          <tr><td>Grades</td><td>13–15 Excellent (A), 11–12 Very good (B), 9–10 Pass (C), 0–8 Needs revision</td><td>–</td></tr>
+        </tbody></table></div>
+      <p class="small muted" style="margin-top:10px">The quiz unlocks when you reach the end of Lesson 3. Questions appear in a random order, there are no hints, and each answer is locked once you submit it. Every attempt is numbered on your result card.</p>
+    </div>
+    <div class="card">
+      <h3>How each step works</h3>
+      <div class="howto">
+        <div><span class="ic">📖</span><b>Learn</b><br><span class="small">Read a short explanation with a campus example.</span></div>
+        <div><span class="ic">🎯</span><b>Try it</b><br><span class="small">Do the activity: click, sort, toggle or decide.</span></div>
+        <div><span class="ic">💡</span><b>Use hints</b><br><span class="small">Stuck? Hints are free and come one at a time.</span></div>
+        <div><span class="ic">✅</span><b>Get feedback</b><br><span class="small">Every answer tells you why it’s right or wrong.</span></div>
+      </div>
+    </div>
+  </section>`;
+  const j = document.getElementById("journey");
+  MODULES.forEach((mod, m) => {
+    const info = modInfo(m);
+    const label = !info.unlocked ? "🔒 Locked" : info.cnt === 5 ? "Review" : info.started ? "Continue" : "Start";
+    const card = el(`<div class="jcard ${info.unlocked?"":"locked"}"><div class="jnum">${m+1}</div>
+      <div><div class="jtitle">${mod.icon} ${mod.title}</div><div class="small muted">${mod.blurb}</div>
+        <div class="jmeta"><span class="pill">5 activities</span><span class="pill">About 12 minutes</span><span class="pill">${info.cnt} of 5 done</span></div>
+        <div class="progress"><i style="width:${info.cnt*20}%"></i></div>
+        ${info.unlocked ? "" : `<div class="small muted" style="margin-top:6px">Reach the end of Lesson ${m} to unlock.</div>`}</div>
+      <button class="btn ${info.cnt===5?"btn-ghost":""} btn-sm" ${info.unlocked?"":"disabled"}>${label}</button></div>`);
+    card.querySelector("button").addEventListener("click", () => go(screenStep, info.target));
+    j.appendChild(card);
+  });
+  const qc = el(`<div class="jcard quiz ${quizOpen?"":"locked"}"><div class="jnum">📝</div>
+    <div><div class="jtitle">Final quiz</div><div class="small muted">15 questions covering all three lessons, 1 mark each.</div>
+      <div class="jmeta"><span class="pill">15 marks</span><span class="pill">Pass: 9</span>${res.length ? `<span class="pill">First attempt: ${res[0].score}/15</span><span class="pill">Best: ${best}/15</span>` : ""}</div>
+      ${quizOpen ? "" : `<div class="small muted">Reach the end of Lesson 3 to unlock.</div>`}</div>
+    <button class="btn btn-sm" ${quizOpen?"":"disabled"}>${quizOpen ? (res.length ? "Retake quiz" : "Take the quiz") : "🔒 Locked"}</button></div>`);
+  qc.querySelector("button").addEventListener("click", () => go(screenQuizIntro));
+  j.appendChild(qc);
+}
+
+function screenStep(pos){
+  mode = "step";
+  const m = Math.floor(pos/5), s = pos % 5, mod = MODULES[m], st = mod.steps[s];
+  if(pos > S.maxPos){ S.maxPos = pos; save(); }
+  const done = !!S.done[pos];
+  const nextLabel = d => d ? (s < 4 ? "Continue" : "Finish lesson") : "Skip for now";
+  app.innerHTML = `<section class="screen stack">
+    <div class="card">
+      <div class="crumbs"><span class="pill">${mod.icon} Lesson ${m+1}</span><span>${mod.title}</span></div>
+      <div class="step-title"><h2>${st.title}</h2><span class="muted">Step ${s+1} of 5</span></div>
+      <div class="progress"><i style="width:${(s+1)/5*100}%"></i></div>
+    </div>
+    <div class="card"><div class="sec-tag">📖 Learn</div>${st.concept}<div class="key">🔑 <b>Key idea:</b> ${st.key}</div></div>
+    <div class="card activity ${done?"is-done":""}" id="act">
+      <div class="act-head"><div class="sec-tag">🎯 Activity</div><span class="done-badge">✓ Completed</span></div>
+      <p class="task-text">${st.task}</p>
+      <div id="actBody"></div>
+      <div class="hint-area"><button class="btn btn-sm hint-btn" id="hintBtn">💡 Show a hint</button><div id="hints"></div></div>
+    </div>
+    <div class="card stepnav">
+      <button class="btn btn-ghost" id="back">◀ Back</button>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <button class="btn ${done?"":"btn-skip"}" id="next">${nextLabel(done)} ▶</button>
+    </div>
+  </section>`;
+  const act = document.getElementById("act"), nextBtn = document.getElementById("next");
+  function drawDots(){ document.getElementById("dots").innerHTML = [0,1,2,3,4].map(i => `<i class="${i===s?"on":""} ${S.done[m*5+i]?"ok":""}"></i>`).join(""); }
+  drawDots();
+  const api = { complete(){
+    if(!S.done[pos]){ S.done[pos] = true; save(); }
+    act.classList.add("is-done"); nextBtn.classList.remove("btn-skip"); nextBtn.innerHTML = nextLabel(true) + " ▶";
+    drawDots(); renderTop();
+  }};
+  let hi = 0; const hb = document.getElementById("hintBtn"), hbox = document.getElementById("hints");
+  hb.addEventListener("click", () => {
+    if(hi >= st.hints.length) return;
+    hbox.appendChild(el(`<div class="hintbox"><b>Hint ${hi+1} of ${st.hints.length}:</b> ${st.hints[hi]}</div>`)); hi++;
+    if(hi >= st.hints.length){ hb.disabled = true; hb.textContent = "No more hints"; } else hb.textContent = "💡 Show another hint";
+  });
+  try{ st.activity(document.getElementById("actBody"), api); }catch(e){ console.error(e); }
+  document.getElementById("back").addEventListener("click", () => go(s > 0 ? () => screenStep(pos-1) : screenOverview));
+  nextBtn.addEventListener("click", () => go(s < 4 ? () => screenStep(pos+1) : () => screenModuleDone(m)));
+}
+
+function screenModuleDone(m){
+  mode = "done";
+  const mod = MODULES[m], cnt = [0,1,2,3,4].filter(i => S.done[m*5+i]).length;
+  app.innerHTML = `<section class="screen card done-card">
+    <div class="medal">${cnt === 5 ? "🏅" : "🎓"}</div>
+    <h2 style="margin-top:10px">Lesson ${m+1} complete!</h2>
+    <p class="lead">${mod.title}</p>
+    <span class="pill">${cnt} of 5 activities completed</span>
+    <div class="takeaways"><h3>What you learned</h3><ul>${mod.takeaways.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+    ${cnt < 5 ? `<p class="muted">You skipped ${5-cnt} ${5-cnt===1?"activity":"activities"}. You can go back to them any time from the map.</p>` : ""}
+    <div class="row wrap center"><button class="btn btn-ghost" id="toMap">🗺️ Back to map</button><button class="btn" id="nextMod">${m < 2 ? `Start Lesson ${m+2}` : "Go to the final quiz"} ▶</button></div>
+  </section>`;
+  if(cnt === 5) confetti();
+  document.getElementById("toMap").addEventListener("click", () => go(screenOverview));
+  document.getElementById("nextMod").addEventListener("click", () => go(m < 2 ? () => screenStep((m+1)*5) : screenQuizIntro));
+}
+
+let Q = null;
+function screenQuizIntro(){
+  mode = "map";
+  const n = doneCount();
+  app.innerHTML = `<section class="screen card">
+    <span class="tag">📝 Final quiz</span>
+    <h2 style="margin-top:12px">Ready to test yourself, ${esc(S.name.split(" ")[0])}?</h2>
+    <div class="tablewrap" style="margin:14px 0"><table class="marks"><tbody>
+      <tr><th>Questions</th><td>15 multiple-choice questions from all three lessons</td></tr>
+      <tr><th>Marks</th><td>1 mark per correct answer, <b>15 marks</b> in total</td></tr>
+      <tr><th>Pass mark</th><td>9 out of 15 (60%)</td></tr>
+      <tr><th>Rules</th><td>No hints. Questions are shuffled. Once you submit an answer it is locked, and you’ll see the explanation straight away.</td></tr>
+      <tr><th>This attempt</th><td>Attempt number ${S.results.length + 1}${S.results.length ? `. Your first attempt scored ${S.results[0].score}/15` : ""}</td></tr>
+    </tbody></table></div>
+    ${n < TOTAL ? `<div class="feedback">You’ve completed ${n} of ${TOTAL} activities. You can still take the quiz, but finishing the activities first will help.</div>` : `<div class="feedback good">You completed all 15 activities. Great preparation!</div>`}
+    <div class="row wrap" style="margin-top:16px"><button class="btn btn-ghost" id="qback">🗺️ Back to map</button><button class="btn" id="qgo">Start the quiz ▶</button></div>
+  </section>`;
+  document.getElementById("qback").addEventListener("click", () => go(screenOverview));
+  document.getElementById("qgo").addEventListener("click", () => { Q = { qs: shuffle(QUIZ).map(q => Object.assign({}, q, {order: shuffle([0,1,2,3])})), i:0, score:0, answers:[], start:Date.now() }; go(screenQuestion); });
+}
+
+function screenQuestion(){
+  mode = "quiz";
+  const q = Q.qs[Q.i]; let sel = null, locked = false;
+  app.innerHTML = `<section class="screen card">
+    <div class="row between wrap"><span class="pill">Question ${Q.i+1} of ${Q.qs.length}</span><span class="pill">Score so far: ${Q.score}</span></div>
+    <div class="progress" style="margin-top:12px"><i style="width:${Q.i/Q.qs.length*100}%"></i></div>
+    <p class="small muted" style="margin:14px 0 0">${q.topic}</p>
+    <h3 class="qprompt">${q.q}</h3>
+    <div class="qopts">${q.order.map((oi,k) => `<button class="qopt" data-oi="${oi}"><span class="letter">${"ABCD"[k]}</span><span>${q.o[oi]}</span></button>`).join("")}</div>
+    <div id="qfb" aria-live="polite"></div>
+    <div class="row end" style="margin-top:16px"><button class="btn" id="qsub" disabled>Submit answer</button></div>
+  </section>`;
+  const sub = document.getElementById("qsub"), btns = app.querySelectorAll(".qopt");
+  btns.forEach(b => b.addEventListener("click", () => { if(locked) return; btns.forEach(x => x.classList.remove("sel")); b.classList.add("sel"); sel = +b.dataset.oi; sub.disabled = false; }));
+  sub.addEventListener("click", () => {
+    if(!locked){
+      if(sel === null) return;
+      locked = true; const ok = sel === q.a; if(ok) Q.score++;
+      Q.answers.push({q:q.q, chosen:q.o[sel], correct:q.o[q.a], ok, ex:q.ex});
+      btns.forEach(x => { x.disabled = true; const oi = +x.dataset.oi; if(oi === q.a) x.classList.add("right"); else if(oi === sel) x.classList.add("wrong"); x.classList.remove("sel"); });
+      document.getElementById("qfb").innerHTML = `<div class="feedback ${ok?"good":"bad"}"><b>${ok ? "✅ Correct! +1 mark." : "❌ Not this time."}</b> ${q.ex}</div>`;
+      sub.textContent = Q.i + 1 < Q.qs.length ? "Next question ▶" : "See my result 🎉";
+    } else if(Q.i + 1 < Q.qs.length){ Q.i++; go(screenQuestion); }
+    else finishQuiz();
+  });
+}
+
+function finishQuiz(){
+  const r = { score:Q.score, total:15, pct:Math.round(Q.score/15*100), ms:Date.now()-Q.start, date:new Date().toISOString(), attempt:S.results.length+1, activities:doneCount() };
+  S.results.push(r); save(); go(screenResult, r, Q.answers);
+}
+
+function screenResult(r, answers){
+  mode = "result";
+  const g = gradeOf(r.score), pass = r.score >= 9;
+  const mins = Math.floor(r.ms/60000), secs = Math.round((r.ms%60000)/1000), when = new Date(r.date).toLocaleString();
+  const text = `Access Control – Activity Result
+Name: ${S.name}
+Roll no.: ${S.roll}
+Quiz score: ${r.score}/15 (${r.pct}%)
+Grade: ${g.g} (${g.t}) – ${pass ? "PASS" : "Needs revision"}
+Activities completed: ${r.activities}/15
+Attempt: ${r.attempt}
+Time taken: ${mins} min ${secs} s
+Date: ${when}`;
+  app.innerHTML = `<section class="screen stack">
+    <div class="card cert">
+      <div class="row between wrap"><span class="tag">🏆 Result card</span><span class="pill">Attempt ${r.attempt}</span></div>
+      <h2 style="margin-top:12px">Access Control: activity result</h2>
+      <div class="result-grid">
+        <div class="ring" style="--p:${r.pct}"><div><div><b>${r.score}</b><span>out of 15</span></div></div></div>
+        <div class="kv">
+          <div><small>Student</small><b>${esc(S.name)}</b></div>
+          <div><small>Roll no.</small><b>${esc(S.roll)}</b></div>
+          <div><small>Percentage</small><b>${r.pct}%</b></div>
+          <div><small>Grade</small><b>${g.g} (${g.t})</b></div>
+          <div><small>Status</small><b class="${pass?"status-pass":"status-fail"}">${pass ? "✅ Pass" : "📚 Needs revision"}</b></div>
+          <div><small>Activities completed</small><b>${r.activities} of 15</b></div>
+          <div><small>Time taken</small><b>${mins} min ${secs} s</b></div>
+          <div><small>Date and time</small><b>${esc(when)}</b></div>
+        </div>
+      </div>
+      <p class="small muted" style="margin-top:14px">📸 If your teacher asks for proof, take a screenshot of this card or copy the result text.</p>
+      <div class="row wrap"><button class="btn" id="copy">📋 Copy result text</button><button class="btn btn-ghost" id="retake">🔁 Retake quiz</button><button class="btn btn-ghost" id="rmap">🗺️ Back to map</button></div>
+      <div id="copyArea"></div>
+    </div>
+    <div class="card"><h3>Review your answers</h3>
+      <ol class="review">${answers.map(a => `<li><b>${a.q}</b><br><span class="${a.ok?"yes":"no"}">${a.ok ? "✓" : "✗"} Your answer: ${a.chosen}</span>${a.ok ? "" : `<br><span class="yes">✓ Correct answer: ${a.correct}</span>`}<div class="small muted" style="margin-top:4px">${a.ex}</div></li>`).join("")}</ol>
+    </div>
+  </section>`;
+  if(pass) confetti();
+  const copyBtn = document.getElementById("copy");
+  copyBtn.addEventListener("click", () => {
+    const fallback = () => {
+      const ca = document.getElementById("copyArea");
+      ca.innerHTML = `<p class="small muted" style="margin-top:12px">Copying isn’t allowed here, so select the text below and copy it yourself.</p><textarea class="copybox" readonly></textarea>`;
+      const ta = ca.querySelector("textarea"); ta.value = text; ta.focus(); ta.select();
+    };
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => { copyBtn.textContent = "✓ Copied"; setTimeout(() => copyBtn.textContent = "📋 Copy result text", 2000); }).catch(fallback);
+      else fallback();
+    }catch(e){ fallback(); }
+  });
+  document.getElementById("retake").addEventListener("click", () => go(screenQuizIntro));
+  document.getElementById("rmap").addEventListener("click", () => go(screenOverview));
+}
+
+load();
+go(screenWelcome);
+})();
+</script>
+</body>
+</html>
